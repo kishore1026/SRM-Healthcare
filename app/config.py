@@ -18,7 +18,7 @@ class Config:
     DB_PASSWORD = os.environ.get('DB_PASSWORD', '')
     DB_NAME = os.environ.get('DB_NAME', 'srm_healthcare')
 
-    SQLALCHEMY_DATABASE_URI = (
+    SQLALCHEMY_DATABASE_URI = os.environ.get('DATABASE_URL') or (
         f"mysql+pymysql://{DB_USER}:{DB_PASSWORD}@{DB_HOST}:{DB_PORT}/{DB_NAME}"
     )
     SQLALCHEMY_TRACK_MODIFICATIONS = False
