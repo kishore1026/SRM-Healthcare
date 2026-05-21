@@ -151,7 +151,7 @@
                             </div>
                             <div class="col-md-4">
                                 <label for="hostel_name" class="form-label fw-semibold">Hostel Name</label>
-                                {{ form.hostel_name(id='hostel_name', class='form-select') }}
+                                {{ form.hostel_name(id='hostel_name', class='form-control') }}
                                 {% for error in form.hostel_name.errors %}
                                     <div class="invalid-feedback d-block">{{ error }}</div>
                                 {% endfor %}

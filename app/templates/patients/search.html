@@ -64,11 +64,7 @@
                     </div>
                     <div class="col-md-3">
                         <label for="hostel" class="form-label small fw-semibold">Hostel</label>
-                        <select class="form-select" name="hostel" id="search_hostel">
-                            {% for value, label in hostel_choices %}
-                            <option value="{{ value }}" {{ 'selected' if filters.hostel == value }}>{{ label }}</option>
-                            {% endfor %}
-                        </select>
+                        <input type="text" class="form-control" name="hostel" id="search_hostel" value="{{ filters.hostel }}">
                     </div>
                     <div class="col-md-3">
                         <label for="gender" class="form-label small fw-semibold">Gender</label>

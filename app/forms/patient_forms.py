@@ -14,21 +14,7 @@ GENDER_CHOICES = [
     ('Other', 'Other'),
 ]
 
-HOSTEL_CHOICES = [
-    ('', '-- Select Hostel --'),
-    ('Azad Hostel', 'Azad Hostel'),
-    ('Annapurna Hostel', 'Annapurna Hostel'),
-    ('Nelson Mandela Hostel', 'Nelson Mandela Hostel'),
-    ('Jawaharlal Nehru Hostel', 'Jawaharlal Nehru Hostel'),
-    ('MS Swaminathan Hostel', 'MS Swaminathan Hostel'),
-    ('APJ Abdul Kalam Hostel', 'APJ Abdul Kalam Kalam'),
-    ('Himalaya Hostel', 'Himalaya Hostel'),
-    ('Vindhya Hostel', 'Vindhya Hostel'),
-    ('Nilgiri Hostel', 'Nilgiri Hostel'),
-    ('Cauvery Hostel', 'Cauvery Hostel'),
-    ('Godavari Hostel', 'Godavari Hostel'),
-    ('Other', 'Other'),
-]
+HOSTEL_CHOICES = []
 
 DESIGNATION_CHOICES = [
     ('', '-- Select Designation --'),
@@ -79,11 +65,10 @@ class PatientForm(FlaskForm):
         render_kw={'class': 'form-control'}
     )
 
-    hostel_name = SelectField(
+    hostel_name = StringField(
         'Hostel Name',
-        choices=HOSTEL_CHOICES,
-        validators=[Optional()],
-        render_kw={'class': 'form-select'}
+        validators=[Optional(), Length(max=100)],
+        render_kw={'class': 'form-control'}
     )
 
     room_number = StringField(
@@ -168,11 +153,10 @@ class EditPatientForm(FlaskForm):
         render_kw={'class': 'form-control'}
     )
 
-    hostel_name = SelectField(
+    hostel_name = StringField(
         'Hostel Name',
-        choices=HOSTEL_CHOICES,
-        validators=[Optional()],
-        render_kw={'class': 'form-select'}
+        validators=[Optional(), Length(max=100)],
+        render_kw={'class': 'form-control'}
     )
 
     room_number = StringField(

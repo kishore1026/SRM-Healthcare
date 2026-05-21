@@ -170,7 +170,7 @@ def advanced_search(filters, page=1, per_page=25):
     # Hostel filter
     hostel = filters.get('hostel', '').strip()
     if hostel:
-        query = query.filter(Patient.hostel_name == hostel)
+        query = query.filter(Patient.hostel_name.ilike(f'%{hostel}%'))
 
     # Gender filter
     gender = filters.get('gender', '').strip()
