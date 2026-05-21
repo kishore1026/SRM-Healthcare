@@ -1,0 +1,416 @@
+{% extends 'base.html' %}
+
+{% block title %}Register Patient - SRM Healthcare{% endblock %}
+
+{% block page_title %}Register New Patient{% endblock %}
+
+{% block breadcrumb %}
+<ol class="breadcrumb mb-0">
+    <li class="breadcrumb-item"><a href="{{ url_for('dashboard.index') }}">Home</a></li>
+    <li class="breadcrumb-item"><a href="{{ url_for('patients.list_patients') }}">Patients</a></li>
+    <li class="breadcrumb-item active" aria-current="page">Register Patient</li>
+</ol>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    .clinical-card {
+        border: none;
+        border-radius: var(--border-radius);
+        background: var(--card-bg);
+        box-shadow: var(--shadow-md);
+        transition: transform var(--transition), box-shadow var(--transition);
+    }
+    .clinical-card:hover {
+        box-shadow: var(--shadow-lg);
+    }
+    .card-header-gradient {
+        background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+        color: #ffffff;
+        border-top-left-radius: var(--border-radius) !important;
+        border-top-right-radius: var(--border-radius) !important;
+        border-bottom: none;
+        padding: 1.25rem 1.5rem;
+    }
+    .stock-pill {
+        display: inline-flex;
+        align-items: center;
+        padding: 0.35rem 0.75rem;
+        font-size: 0.85rem;
+        font-weight: 600;
+        border-radius: 20px;
+        transition: all 0.25s ease;
+    }
+    .form-section-title {
+        color: var(--primary);
+        font-weight: 700;
+        text-transform: uppercase;
+        font-size: 0.8rem;
+        letter-spacing: 1px;
+        margin-bottom: 1.25rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+    .form-section-title::after {
+        content: '';
+        flex-grow: 1;
+        height: 1px;
+        background: var(--card-border);
+    }
+    .btn-gradient-submit {
+        background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+        color: #ffffff;
+        border: none;
+        box-shadow: 0 4px 10px rgba(13, 148, 136, 0.25);
+        font-weight: 600;
+        transition: all var(--transition);
+    }
+    .btn-gradient-submit:hover {
+        background: linear-gradient(135deg, var(--primary-light) 0%, var(--primary) 100%);
+        color: #ffffff;
+        transform: translateY(-1px);
+        box-shadow: 0 6px 14px rgba(13, 148, 136, 0.35);
+    }
+    .btn-outline-custom {
+        border-color: var(--card-border);
+        color: var(--text-secondary);
+        font-weight: 500;
+    }
+    .btn-outline-custom:hover {
+        background: #f8fafc;
+        color: var(--text-primary);
+        border-color: var(--text-light);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-3">
+    <div class="row justify-content-center">
+        <div class="col-lg-8 col-xl-7">
+            <div class="card clinical-card">
+                <div class="card-header card-header-gradient">
+                    <h5 class="card-title mb-0 d-flex align-items-center">
+                        <i class="bi bi-person-plus-fill me-2 fs-4"></i>
+                        <span>New Patient Registration</span>
+                    </h5>
+                </div>
+                <div class="card-body p-4">
+                    <form method="POST" id="patientForm" action="{{ url_for('patients.add_patient') }}" novalidate>
+                        {{ form.hidden_tag() }}
+
+                        <!-- Patient Demographics Section -->
+                        <div class="form-section-title">
+                            <i class="bi bi-person-bounding-box"></i>
+                            Patient Demographics
+                        </div>
+
+                        <div class="row g-3 mb-4">
+                            <div class="col-md-6">
+                                <label for="patient_name" class="form-label fw-semibold">Patient Name <span class="text-danger">*</span></label>
+                                {{ form.patient_name(id='patient_name', class='form-control') }}
+                                {% for error in form.patient_name.errors %}
+                                    <div class="invalid-feedback d-block">{{ error }}</div>
+                                {% endfor %}
+                            </div>
+                            <div class="col-md-3">
+                                <label for="age" class="form-label fw-semibold">Age <span class="text-danger">*</span></label>
+                                {{ form.age(id='age', class='form-control', min='1', max='120') }}
+                                {% for error in form.age.errors %}
+                                    <div class="invalid-feedback d-block">{{ error }}</div>
+                                {% endfor %}
+                            </div>
+                            <div class="col-md-3">
+                                <label for="gender" class="form-label fw-semibold">Gender <span class="text-danger">*</span></label>
+                                {{ form.gender(id='gender', class='form-select') }}
+                                {% for error in form.gender.errors %}
+                                    <div class="invalid-feedback d-block">{{ error }}</div>
+                                {% endfor %}
+                            </div>
+                        </div>
+
+                        <div class="row g-3 mb-4">
+                            <div class="col-md-6">
+                                <label for="designation" class="form-label fw-semibold">Designation <span class="text-danger">*</span></label>
+                                {{ form.designation(id='designation', class='form-control') }}
+                                {% for error in form.designation.errors %}
+                                    <div class="invalid-feedback d-block">{{ error }}</div>
+                                {% endfor %}
+                            </div>
+                        </div>
+
+                        <!-- Medical Information Section -->
+                        <div class="form-section-title">
+                            <i class="bi bi-heart-pulse"></i>
+                            Medical Diagnosis & Symptoms
+                        </div>
+
+                        <div class="row g-3 mb-4">
+                            <div class="col-12">
+                                <label for="medical_history" class="form-label fw-semibold">Medical Information</label>
+                                {{ form.medical_history(id='medical_history', class='form-control', rows='3') }}
+                                {% for error in form.medical_history.errors %}
+                                    <div class="invalid-feedback d-block">{{ error }}</div>
+                                {% endfor %}
+                            </div>
+                        </div>
+
+                        <!-- Prescription & Inventory Stock Section -->
+                        <div class="form-section-title">
+                            <i class="bi bi-capsule"></i>
+                            Prescribed Medicine & Stock Management
+                        </div>
+
+                        <div class="row g-3 mb-4 align-items-end">
+                            <div class="col-md-7">
+                                <label for="medicine_id" class="form-label fw-semibold">Prescribed Medicine <span class="text-danger">*</span></label>
+                                {{ form.medicine_id(id='medicine_id', class='form-select') }}
+                                <div class="mt-2" id="stock-badge-container">
+                                    <span id="stock-badge" class="stock-pill d-none">
+                                        <i class="bi bi-box-seam me-1"></i>
+                                        <span>Stock: 0</span>
+                                    </span>
+                                </div>
+                                {% for error in form.medicine_id.errors %}
+                                    <div class="invalid-feedback d-block">{{ error }}</div>
+                                {% endfor %}
+                            </div>
+                            <div class="col-md-5">
+                                <label for="quantity" class="form-label fw-semibold">Medicine Quantity Used <span class="text-danger">*</span></label>
+                                {{ form.quantity(id='quantity', class='form-control', min='1') }}
+                                {% for error in form.quantity.errors %}
+                                    <div class="invalid-feedback d-block">{{ error }}</div>
+                                {% endfor %}
+                            </div>
+                        </div>
+
+                        <!-- Actions Grid -->
+                        <div class="row pt-3 border-top mt-4">
+                            <div class="col-6">
+                                <a href="{{ url_for('patients.list_patients') }}" class="btn btn-outline-custom px-4 py-2 me-2">
+                                    <i class="bi bi-arrow-left me-1"></i> Cancel
+                                </a>
+                                <button type="reset" id="resetBtn" class="btn btn-outline-danger px-4 py-2">
+                                    <i class="bi bi-arrow-counterclockwise me-1"></i> Reset
+                                </button>
+                            </div>
+                            <div class="col-6 text-end">
+                                <button type="submit" class="btn btn-gradient-submit px-5 py-2">
+                                    <i class="bi bi-check-circle me-1"></i> Register Patient
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Preload medicine data (id, name, available_balance) from context
+    window.medicineStocks = {
+        {% for med in medicines %}
+        "{{ med.medicine_id }}": {
+            name: "{{ med.medicine_name|e }}",
+            stock: {{ med.available_balance }},
+            expired: {{ 'true' if med.is_expired else 'false' }}
+        }{{ ',' if not loop.last }}
+        {% endfor %}
+    };
+
+    document.addEventListener('DOMContentLoaded', function () {
+        const medicineSelect = document.getElementById('medicine_id');
+        const quantityInput = document.getElementById('quantity');
+        const stockBadge = document.getElementById('stock-badge');
+        const patientForm = document.getElementById('patientForm');
+        const resetBtn = document.getElementById('resetBtn');
+
+        // Function to update available stock badge and input validations
+        function handleMedicineChange() {
+            const medId = medicineSelect.value;
+            const stockData = window.medicineStocks[medId];
+
+            if (medId && medId !== '0' && stockData) {
+                const stock = stockData.stock;
+                
+                // Show badge
+                stockBadge.classList.remove('d-none', 'bg-success-subtle', 'text-success', 'bg-warning-subtle', 'text-warning', 'bg-danger-subtle', 'text-danger');
+                
+                if (stock <= 0) {
+                    stockBadge.classList.add('bg-danger-subtle', 'text-danger', 'border', 'border-danger-subtle');
+                    stockBadge.querySelector('span').textContent = `Out of Stock: 0 left`;
+                    quantityInput.max = 0;
+                } else if (stock <= 10) {
+                    stockBadge.classList.add('bg-warning-subtle', 'text-warning', 'border', 'border-warning-subtle');
+                    stockBadge.querySelector('span').textContent = `Low Stock: ${stock} left`;
+                    quantityInput.max = stock;
+                } else {
+                    stockBadge.classList.add('bg-success-subtle', 'text-success', 'border', 'border-success-subtle');
+                    stockBadge.querySelector('span').textContent = `Stock Available: ${stock} left`;
+                    quantityInput.max = stock;
+                }
+                
+                // Enable quantity validation check
+                validateQuantity();
+            } else {
+                // Hide badge
+                stockBadge.classList.add('d-none');
+                quantityInput.removeAttribute('max');
+                quantityInput.classList.remove('is-invalid', 'is-valid');
+            }
+        }
+
+        // Validate Quantity Used
+        function validateQuantity() {
+            const medId = medicineSelect.value;
+            const stockData = window.medicineStocks[medId];
+            const qtyVal = parseInt(quantityInput.value) || 0;
+
+            // Remove existing feedback
+            removeValidationFeedback(quantityInput);
+
+            if (!medId || medId === '0' || !stockData) {
+                return true;
+            }
+
+            const stock = stockData.stock;
+
+            if (qtyVal <= 0) {
+                setInvalidState(quantityInput, "Quantity must be at least 1.");
+                return false;
+            } else if (qtyVal > stock) {
+                setInvalidState(quantityInput, `Quantity exceeds available stock. Only ${stock} left.`);
+                return false;
+            } else {
+                setValidState(quantityInput);
+                return true;
+            }
+        }
+
+        // State helpers
+        function setInvalidState(inputEl, msg) {
+            inputEl.classList.remove('is-valid');
+            inputEl.classList.add('is-invalid');
+            
+            // Add message
+            const fb = document.createElement('div');
+            fb.className = 'invalid-feedback dynamic-feedback';
+            fb.textContent = msg;
+            inputEl.parentNode.appendChild(fb);
+        }
+
+        function setValidState(inputEl) {
+            inputEl.classList.remove('is-invalid');
+            inputEl.classList.add('is-valid');
+        }
+
+        function removeValidationFeedback(inputEl) {
+            inputEl.classList.remove('is-invalid', 'is-valid');
+            const feedBacks = inputEl.parentNode.querySelectorAll('.dynamic-feedback');
+            feedBacks.forEach(el => el.remove());
+        }
+
+        // Register event listeners
+        medicineSelect.addEventListener('change', handleMedicineChange);
+        quantityInput.addEventListener('input', validateQuantity);
+
+        // Reset click handler
+        resetBtn.addEventListener('click', function (e) {
+            e.preventDefault();
+            
+            // Reset native form
+            patientForm.reset();
+
+            // Clear visual validation states
+            const inputs = patientForm.querySelectorAll('.form-control, .form-select');
+            inputs.forEach(input => {
+                input.classList.remove('is-invalid', 'is-valid');
+                removeValidationFeedback(input);
+            });
+
+            // Hide badge
+            stockBadge.classList.add('d-none');
+            
+            // Focus on first element
+            document.getElementById('patient_name').focus();
+        });
+
+        // Form Submit Handler
+        patientForm.addEventListener('submit', function (e) {
+            let formValid = true;
+
+            // Standard HTML5 validation trigger
+            const inputs = patientForm.querySelectorAll('.form-control[required], .form-select[required]');
+            
+            // Reset current errors
+            const errors = patientForm.querySelectorAll('.invalid-feedback');
+            errors.forEach(el => {
+                if (!el.classList.contains('dynamic-feedback')) {
+                    el.style.display = 'none';
+                }
+            });
+
+            // Validate Patient Name
+            const nameEl = document.getElementById('patient_name');
+            removeValidationFeedback(nameEl);
+            if (!nameEl.value.trim()) {
+                setInvalidState(nameEl, "Patient name is required.");
+                formValid = false;
+            }
+
+            // Validate Age
+            const ageEl = document.getElementById('age');
+            removeValidationFeedback(ageEl);
+            const ageVal = parseInt(ageEl.value) || 0;
+            if (!ageEl.value || ageVal <= 0 || ageVal > 120) {
+                setInvalidState(ageEl, "Please enter a valid age between 1 and 120.");
+                formValid = false;
+            }
+
+            // Validate Gender
+            const genderEl = document.getElementById('gender');
+            removeValidationFeedback(genderEl);
+            if (!genderEl.value) {
+                setInvalidState(genderEl, "Please select a gender.");
+                formValid = false;
+            }
+
+            // Validate Designation
+            const designationEl = document.getElementById('designation');
+            removeValidationFeedback(designationEl);
+            if (!designationEl.value.trim()) {
+                setInvalidState(designationEl, "Designation is required.");
+                formValid = false;
+            }
+
+            // Validate Medicine Select
+            removeValidationFeedback(medicineSelect);
+            if (!medicineSelect.value || medicineSelect.value === '0') {
+                setInvalidState(medicineSelect, "Please prescribe a medicine.");
+                formValid = false;
+            }
+
+            // Validate Quantity Select
+            if (!validateQuantity()) {
+                formValid = false;
+            }
+
+            if (!formValid) {
+                e.preventDefault();
+                // Focus on first invalid element
+                const firstInvalid = patientForm.querySelector('.is-invalid');
+                if (firstInvalid) {
+                    firstInvalid.focus();
+                }
+            }
+        });
+
+        // Trigger on load for handling potential WTForms validation errors/preserves
+        handleMedicineChange();
+    });
+</script>
+{% endblock %}

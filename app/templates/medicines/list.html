@@ -1,0 +1,169 @@
+{% extends 'base.html' %}
+
+{% block title %}Medicine Inventory - SRM Healthcare{% endblock %}
+
+{% block page_title %}Medicine Inventory{% endblock %}
+
+{% block breadcrumb %}
+<ol class="breadcrumb mb-0">
+    <li class="breadcrumb-item"><a href="{{ url_for('dashboard.index') }}">Home</a></li>
+    <li class="breadcrumb-item active" aria-current="page">Medicines</li>
+</ol>
+{% endblock %}
+
+{% block content %}
+<!-- ─── Header Bar ─── -->
+<div class="d-flex flex-wrap justify-content-between align-items-center mb-4">
+    <div class="d-flex gap-2 flex-wrap">
+        <a href="{{ url_for('medicines.add_medicine') }}" class="btn btn-primary">
+            <i class="bi bi-plus-circle me-1"></i> Add Medicine
+        </a>
+        <a href="{{ url_for('medicines.alerts') }}" class="btn btn-outline-warning position-relative">
+            <i class="bi bi-bell-fill me-1"></i> Alerts
+            {% if alerts.total_alerts > 0 %}
+            <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">
+                {{ alerts.total_alerts }}
+            </span>
+            {% endif %}
+        </a>
+    </div>
+</div>
+
+<!-- ─── Search & Filter ─── -->
+<div class="card border-0 shadow-sm mb-4">
+    <div class="card-body py-3">
+        <form method="GET" action="{{ url_for('medicines.list_medicines') }}" class="row g-2 align-items-end">
+            <div class="col-md-4">
+                <label class="form-label small fw-semibold">Search</label>
+                <div class="input-group">
+                    <span class="input-group-text"><i class="bi bi-search"></i></span>
+                    <input type="text" name="q" class="form-control" placeholder="Medicine name..."
+                           value="{{ search }}">
+                </div>
+            </div>
+            <div class="col-md-3">
+                <label class="form-label small fw-semibold">Drug Type</label>
+                <select name="type" class="form-select">
+                    <option value="">All Types</option>
+                    {% for t in ['Tablets','Capsules','Injections','Eye Drops','Ear Drops','Ointments'] %}
+                    <option value="{{ t }}" {{ 'selected' if drug_type == t }}>{{ t }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-3">
+                <label class="form-label small fw-semibold">Status</label>
+                <select name="status" class="form-select">
+                    <option value="">All Status</option>
+                    <option value="low" {{ 'selected' if status == 'low' }}>Low Stock</option>
+                    <option value="out" {{ 'selected' if status == 'out' }}>Out of Stock</option>
+                    <option value="expiring" {{ 'selected' if status == 'expiring' }}>Expiring Soon</option>
+                    <option value="expired" {{ 'selected' if status == 'expired' }}>Expired</option>
+                </select>
+            </div>
+            <div class="col-md-2">
+                <button type="submit" class="btn btn-primary w-100">
+                    <i class="bi bi-funnel me-1"></i> Filter
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- ─── Medicine Table ─── -->
+<div class="card border-0 shadow-sm">
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th style="width:5%">#</th>
+                        <th>Medicine Name</th>
+                        <th>Drug Type</th>
+                        <th>Batch #</th>
+                        <th>Expiry Date</th>
+                        <th class="text-center">Stock</th>
+                        <th class="text-center">Status</th>
+                        <th class="text-center">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for med in medicines.items %}
+                    {% set stock_text, stock_color = med.stock_status %}
+                    {% set expiry_text, expiry_color = med.expiry_status %}
+                    <tr>
+                        <td class="text-muted">{{ loop.index + (medicines.page - 1) * medicines.per_page }}</td>
+                        <td>
+                            <span class="fw-semibold">{{ med.medicine_name }}</span>
+                        </td>
+                        <td><span class="badge bg-light text-dark border">{{ med.drug_type }}</span></td>
+                        <td><small class="text-muted">{{ med.batch_number or '—' }}</small></td>
+                        <td>
+                            <small>{{ format_date(med.expiry_date) }}</small><br>
+                            <span class="badge bg-{{ expiry_color }} bg-opacity-10 text-{{ expiry_color }}">
+                                {{ expiry_text }}
+                                {% if not med.is_expired %}({{ med.days_until_expiry }}d){% endif %}
+                            </span>
+                        </td>
+                        <td class="text-center">
+                            <span class="fw-bold fs-5">{{ med.available_balance }}</span><br>
+                            <small class="text-muted">+{{ med.stock_added }} / -{{ med.stock_deducted }}</small>
+                        </td>
+                        <td class="text-center">
+                            <span class="badge bg-{{ stock_color }}">{{ stock_text }}</span>
+                        </td>
+                        <td class="text-center">
+                            <a href="{{ url_for('medicines.edit_medicine', id=med.medicine_id) }}"
+                               class="btn btn-sm btn-outline-primary" title="Edit">
+                                <i class="bi bi-pencil-square"></i>
+                            </a>
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="8" class="text-center py-5">
+                            <i class="bi bi-capsule text-muted" style="font-size: 3rem;"></i>
+                            <p class="text-muted mt-2 mb-0">No medicines found.</p>
+                            <a href="{{ url_for('medicines.add_medicine') }}" class="btn btn-primary btn-sm mt-2">
+                                <i class="bi bi-plus-circle me-1"></i> Add First Medicine
+                            </a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+    <!-- Pagination -->
+    {% if medicines.pages > 1 %}
+    <div class="card-footer bg-white border-top-0">
+        <nav>
+            <ul class="pagination pagination-sm justify-content-center mb-0">
+                <li class="page-item {{ 'disabled' if not medicines.has_prev }}">
+                    <a class="page-link" href="{{ url_for('medicines.list_medicines', page=medicines.prev_num, q=search, type=drug_type, status=status) }}">
+                        <i class="bi bi-chevron-left"></i>
+                    </a>
+                </li>
+                {% for p in medicines.iter_pages(left_edge=1, right_edge=1, left_current=2, right_current=2) %}
+                    {% if p %}
+                    <li class="page-item {{ 'active' if p == medicines.page }}">
+                        <a class="page-link" href="{{ url_for('medicines.list_medicines', page=p, q=search, type=drug_type, status=status) }}">{{ p }}</a>
+                    </li>
+                    {% else %}
+                    <li class="page-item disabled"><span class="page-link">…</span></li>
+                    {% endif %}
+                {% endfor %}
+                <li class="page-item {{ 'disabled' if not medicines.has_next }}">
+                    <a class="page-link" href="{{ url_for('medicines.list_medicines', page=medicines.next_num, q=search, type=drug_type, status=status) }}">
+                        <i class="bi bi-chevron-right"></i>
+                    </a>
+                </li>
+            </ul>
+        </nav>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{{ url_for('static', filename='js/medicines.js') }}"></script>
+{% endblock %}

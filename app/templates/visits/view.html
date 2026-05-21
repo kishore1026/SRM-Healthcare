@@ -1,0 +1,265 @@
+{% extends 'base.html' %}
+
+{% block title %}Visit #{{ visit.visit_id }} - SRM Healthcare{% endblock %}
+
+{% block page_title %}Visit Details{% endblock %}
+
+{% block breadcrumb %}
+<ol class="breadcrumb mb-0">
+    <li class="breadcrumb-item"><a href="{{ url_for('dashboard.index') }}">Home</a></li>
+    <li class="breadcrumb-item"><a href="{{ url_for('patients.list_patients') }}">Patients</a></li>
+    <li class="breadcrumb-item"><a href="{{ url_for('patients.view_patient', id=patient.patient_id) }}">{{ patient.patient_name }}</a></li>
+    <li class="breadcrumb-item active" aria-current="page">Visit #{{ visit.visit_id }}</li>
+</ol>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <!-- Visit Details -->
+        <div class="col-lg-8">
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-header bg-white d-flex justify-content-between align-items-center py-3">
+                    <h5 class="mb-0">
+                        <i class="bi bi-calendar2-check me-2 text-success"></i>
+                        Visit Record
+                    </h5>
+                    <div>
+                        <span class="badge bg-light text-dark border me-2">
+                            S/N: {{ visit.serial_number or '—' }}
+                        </span>
+                        <span class="badge bg-primary">
+                            {{ format_date(visit.visit_date) }}
+                        </span>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <!-- Visit Meta -->
+                    <div class="row g-3 mb-4">
+                        <div class="col-sm-4">
+                            <div class="text-muted small">Visit Date</div>
+                            <div class="fw-semibold">{{ format_date(visit.visit_date) }}</div>
+                        </div>
+                        <div class="col-sm-4">
+                            <div class="text-muted small">Visit Time</div>
+                            <div class="fw-semibold">{{ format_time(visit.visit_time) }}</div>
+                        </div>
+                        <div class="col-sm-4">
+                            <div class="text-muted small">Doctor</div>
+                            <div class="fw-semibold">
+                                <i class="bi bi-person-badge me-1 text-primary"></i>
+                                {{ visit.doctor.doctor_name if visit.doctor else '—' }}
+                            </div>
+                        </div>
+                    </div>
+
+                    <hr>
+
+                    <!-- Clinical Details -->
+                    <div class="mb-4">
+                        <h6 class="text-muted text-uppercase small fw-bold mb-2">
+                            <i class="bi bi-chat-left-text me-1"></i> Chief Complaint
+                        </h6>
+                        <div class="bg-light rounded p-3">
+                            {{ visit.complaint or 'No complaint recorded.' }}
+                        </div>
+                    </div>
+
+                    <div class="mb-4">
+                        <h6 class="text-muted text-uppercase small fw-bold mb-2">
+                            <i class="bi bi-clipboard2-pulse me-1"></i> Diagnosis
+                        </h6>
+                        <div class="bg-light rounded p-3">
+                            {{ visit.diagnosis or 'No diagnosis recorded.' }}
+                        </div>
+                    </div>
+
+                    <div class="mb-4">
+                        <h6 class="text-muted text-uppercase small fw-bold mb-2">
+                            <i class="bi bi-bandaid me-1"></i> Treatment / Advice
+                        </h6>
+                        <div class="bg-light rounded p-3">
+                            {{ visit.treatment or 'No treatment recorded.' }}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Prescriptions Section -->
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-white d-flex justify-content-between align-items-center py-3">
+                    <h5 class="mb-0">
+                        <i class="bi bi-file-earmark-medical me-2 text-info"></i>
+                        Prescriptions
+                        {% if prescriptions %}
+                        <span class="badge bg-info ms-1">{{ prescriptions|length }}</span>
+                        {% endif %}
+                    </h5>
+                    <a href="{{ url_for('prescriptions.create', visit_id=visit.visit_id) }}"
+                       class="btn btn-outline-primary btn-sm">
+                        <i class="bi bi-plus-lg me-1"></i>New Prescription
+                    </a>
+                </div>
+                <div class="card-body">
+                    {% if prescriptions %}
+                        {% for prescription in prescriptions %}
+                        <div class="card border mb-3">
+                            <div class="card-header bg-light d-flex justify-content-between align-items-center py-2">
+                                <span class="fw-semibold">
+                                    <i class="bi bi-prescription2 me-1"></i>
+                                    Prescription #{{ prescription.prescription_id }}
+                                </span>
+                                <small class="text-muted">
+                                    {{ format_datetime(prescription.created_at) }}
+                                    &middot; {{ prescription.total_items }} item(s)
+                                </small>
+                            </div>
+                            <div class="card-body p-0">
+                                {% if prescription.items %}
+                                <div class="table-responsive">
+                                    <table class="table table-sm align-middle mb-0">
+                                        <thead class="table-light">
+                                            <tr>
+                                                <th class="ps-3">Medicine</th>
+                                                <th>Dosage</th>
+                                                <th>Frequency</th>
+                                                <th>Duration</th>
+                                                <th>Qty</th>
+                                                <th>Instructions</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {% for item in prescription.items %}
+                                            <tr>
+                                                <td class="ps-3 fw-semibold">
+                                                    {{ item.medicine.medicine_name if item.medicine else 'Unknown' }}
+                                                </td>
+                                                <td>{{ item.dosage or '—' }}</td>
+                                                <td>{{ item.frequency or '—' }}</td>
+                                                <td>{{ item.duration or '—' }}</td>
+                                                <td>
+                                                    <span class="badge bg-light text-dark border">{{ item.quantity }}</span>
+                                                </td>
+                                                <td>
+                                                    <small class="text-muted">{{ item.instructions or '—' }}</small>
+                                                </td>
+                                            </tr>
+                                            {% endfor %}
+                                        </tbody>
+                                    </table>
+                                </div>
+                                {% endif %}
+                                {% if prescription.notes %}
+                                <div class="px-3 py-2 border-top bg-light">
+                                    <small><i class="bi bi-chat-dots me-1"></i><strong>Notes:</strong> {{ prescription.notes }}</small>
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        {% endfor %}
+                    {% else %}
+                    <div class="text-center py-4 text-muted">
+                        <i class="bi bi-file-earmark-x fs-1 d-block mb-2"></i>
+                        <p class="mb-2">No prescriptions created for this visit yet.</p>
+                        <a href="{{ url_for('prescriptions.create', visit_id=visit.visit_id) }}"
+                           class="btn btn-primary btn-sm">
+                            <i class="bi bi-plus-lg me-1"></i>Create Prescription
+                        </a>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Patient Sidebar -->
+        <div class="col-lg-4">
+            <div class="card border-0 shadow-sm mb-3">
+                <div class="card-header bg-white">
+                    <h6 class="mb-0">
+                        <i class="bi bi-person-circle me-2 text-primary"></i>Patient Info
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="mb-2">
+                        <div class="text-muted small">Name</div>
+                        <div class="fw-semibold">
+                            <a href="{{ url_for('patients.view_patient', id=patient.patient_id) }}" class="text-decoration-none">
+                                {{ patient.patient_name }}
+                            </a>
+                        </div>
+                    </div>
+                    <div class="mb-2">
+                        <div class="text-muted small">Age / Gender</div>
+                        <div>{{ patient.age }} yrs &middot;
+                            {% if patient.gender == 'Male' %}
+                                <span class="text-primary">Male</span>
+                            {% elif patient.gender == 'Female' %}
+                                <span class="text-danger">Female</span>
+                            {% else %}
+                                <span class="text-secondary">Other</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                    <div class="mb-2">
+                        <div class="text-muted small">Designation</div>
+                        <div>
+                            {{ patient.designation }}
+                            {% if patient.display_id %}
+                                &middot; <code>{{ patient.display_id }}</code>
+                            {% endif %}
+                        </div>
+                    </div>
+                    {% if patient.designation == 'Student' %}
+                    <div class="mb-2">
+                        <div class="text-muted small">Hostel / Room</div>
+                        <div>{{ patient.hostel_name or '—' }} / {{ patient.room_number or '—' }}</div>
+                    </div>
+                    {% endif %}
+                </div>
+                <div class="card-footer bg-white border-top">
+                    <a href="{{ url_for('patients.view_patient', id=patient.patient_id) }}"
+                       class="btn btn-outline-primary btn-sm w-100">
+                        <i class="bi bi-arrow-right me-1"></i>View Full Profile
+                    </a>
+                </div>
+            </div>
+
+            {% if patient.drug_allergy %}
+            <div class="card border-0 shadow-sm border-start border-warning border-3 mb-3">
+                <div class="card-body">
+                    <h6 class="text-warning mb-2">
+                        <i class="bi bi-exclamation-triangle-fill me-1"></i>Drug Allergies
+                    </h6>
+                    <div class="alert alert-warning mb-0 py-2">
+                        {{ patient.drug_allergy }}
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- Quick Actions -->
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-white">
+                    <h6 class="mb-0">
+                        <i class="bi bi-lightning me-2 text-warning"></i>Quick Actions
+                    </h6>
+                </div>
+                <div class="card-body d-grid gap-2">
+                    <a href="{{ url_for('visits.add_visit', patient_id=patient.patient_id) }}"
+                       class="btn btn-outline-success btn-sm">
+                        <i class="bi bi-calendar-plus me-1"></i>Record Another Visit
+                    </a>
+                    <a href="{{ url_for('prescriptions.create', visit_id=visit.visit_id) }}"
+                       class="btn btn-outline-info btn-sm">
+                        <i class="bi bi-prescription2 me-1"></i>Create Prescription
+                    </a>
+                    <a href="{{ url_for('patients.view_patient', id=patient.patient_id) }}"
+                       class="btn btn-outline-secondary btn-sm">
+                        <i class="bi bi-arrow-left me-1"></i>Back to Patient
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

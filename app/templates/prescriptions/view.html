@@ -1,0 +1,147 @@
+{% extends 'base.html' %}
+
+{% block title %}Prescription #{{ prescription.prescription_id }} - SRM Healthcare{% endblock %}
+
+{% block page_title %}Prescription Details{% endblock %}
+
+{% block breadcrumb %}
+<ol class="breadcrumb mb-0">
+    <li class="breadcrumb-item"><a href="{{ url_for('dashboard.index') }}">Home</a></li>
+    <li class="breadcrumb-item">Prescriptions</li>
+    <li class="breadcrumb-item active" aria-current="page">#{{ prescription.prescription_id }}</li>
+</ol>
+{% endblock %}
+
+{% block content %}
+<div class="row g-4">
+    <!-- ─── Patient & Visit Info ─── -->
+    <div class="col-lg-4">
+        <div class="card border-0 shadow-sm mb-4">
+            <div class="card-header bg-primary text-white py-3">
+                <h6 class="mb-0"><i class="bi bi-person me-1"></i> Patient Information</h6>
+            </div>
+            <div class="card-body">
+                <table class="table table-borderless table-sm mb-0">
+                    <tr>
+                        <td class="text-muted fw-semibold" style="width:40%">Name</td>
+                        <td class="fw-bold">{{ patient.patient_name }}</td>
+                    </tr>
+                    <tr>
+                        <td class="text-muted fw-semibold">Age / Gender</td>
+                        <td>{{ patient.age }} / {{ patient.gender }}</td>
+                    </tr>
+                    <tr>
+                        <td class="text-muted fw-semibold">Designation</td>
+                        <td>{{ patient.designation }}</td>
+                    </tr>
+                    <tr>
+                        <td class="text-muted fw-semibold">ID</td>
+                        <td>{{ patient.display_id or '—' }}</td>
+                    </tr>
+                    {% if patient.drug_allergy %}
+                    <tr>
+                        <td class="text-muted fw-semibold">Drug Allergy</td>
+                        <td class="text-danger fw-bold">
+                            <i class="bi bi-exclamation-triangle-fill me-1"></i>{{ patient.drug_allergy }}
+                        </td>
+                    </tr>
+                    {% endif %}
+                </table>
+            </div>
+        </div>
+
+        <div class="card border-0 shadow-sm">
+            <div class="card-header bg-info text-white py-3">
+                <h6 class="mb-0"><i class="bi bi-calendar2-check me-1"></i> Visit Information</h6>
+            </div>
+            <div class="card-body">
+                <table class="table table-borderless table-sm mb-0">
+                    <tr>
+                        <td class="text-muted fw-semibold" style="width:40%">Visit Date</td>
+                        <td>{{ format_date(visit.visit_date) }}</td>
+                    </tr>
+                    <tr>
+                        <td class="text-muted fw-semibold">Time</td>
+                        <td>{{ format_time(visit.visit_time) }}</td>
+                    </tr>
+                    <tr>
+                        <td class="text-muted fw-semibold">Complaint</td>
+                        <td>{{ visit.complaint or '—' }}</td>
+                    </tr>
+                    <tr>
+                        <td class="text-muted fw-semibold">Diagnosis</td>
+                        <td>{{ visit.diagnosis or '—' }}</td>
+                    </tr>
+                    <tr>
+                        <td class="text-muted fw-semibold">Treatment</td>
+                        <td>{{ visit.treatment or '—' }}</td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- ─── Prescription Details ─── -->
+    <div class="col-lg-8">
+        <div class="card border-0 shadow-sm">
+            <div class="card-header bg-success text-white py-3 d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">
+                    <i class="bi bi-file-earmark-medical me-2"></i>
+                    Prescription #{{ prescription.prescription_id }}
+                </h5>
+                <span class="badge bg-white text-success">
+                    {{ prescription.total_items }} item{{ 's' if prescription.total_items != 1 }}
+                </span>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th>#</th>
+                                <th>Medicine</th>
+                                <th>Drug Type</th>
+                                <th>Dosage</th>
+                                <th>Frequency</th>
+                                <th>Duration</th>
+                                <th class="text-center">Qty</th>
+                                <th>Instructions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for item in prescription.items %}
+                            <tr>
+                                <td class="text-muted">{{ loop.index }}</td>
+                                <td class="fw-semibold">{{ item.medicine.medicine_name }}</td>
+                                <td>
+                                    <span class="badge bg-light text-dark border">{{ item.medicine.drug_type }}</span>
+                                </td>
+                                <td>{{ item.dosage or '—' }}</td>
+                                <td>{{ item.frequency or '—' }}</td>
+                                <td>{{ item.duration or '—' }}</td>
+                                <td class="text-center">
+                                    <span class="badge bg-primary rounded-pill">{{ item.quantity }}</span>
+                                </td>
+                                <td><small class="text-muted">{{ item.instructions or '—' }}</small></td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            {% if prescription.notes %}
+            <div class="card-footer bg-light">
+                <small class="text-muted fw-semibold">Notes:</small>
+                <p class="mb-0 mt-1">{{ prescription.notes }}</p>
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- Timestamp -->
+        <div class="text-muted text-end mt-3 small">
+            <i class="bi bi-clock me-1"></i>
+            Created on {{ format_datetime(prescription.created_at) }}
+        </div>
+    </div>
+</div>
+{% endblock %}

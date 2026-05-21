@@ -1,0 +1,98 @@
+{% extends 'base.html' %}
+
+{% block title %}Add Medicine - SRM Healthcare{% endblock %}
+
+{% block page_title %}Add Medicine{% endblock %}
+
+{% block breadcrumb %}
+<ol class="breadcrumb mb-0">
+    <li class="breadcrumb-item"><a href="{{ url_for('dashboard.index') }}">Home</a></li>
+    <li class="breadcrumb-item"><a href="{{ url_for('medicines.list_medicines') }}">Medicines</a></li>
+    <li class="breadcrumb-item active" aria-current="page">Add Medicine</li>
+</ol>
+{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        <div class="card border-0 shadow-sm">
+            <div class="card-header bg-primary text-white py-3">
+                <h5 class="mb-0"><i class="bi bi-plus-circle me-2"></i>Add New Medicine</h5>
+            </div>
+            <div class="card-body p-4">
+                <form method="POST" action="{{ url_for('medicines.add_medicine') }}" novalidate>
+                    {{ form.hidden_tag() }}
+
+                    <div class="row g-3">
+                        <!-- Medicine Name -->
+                        <div class="col-md-8">
+                            <label for="medicine_name" class="form-label fw-semibold">
+                                Medicine Name <span class="text-danger">*</span>
+                            </label>
+                            {{ form.medicine_name(class="form-control" + (" is-invalid" if form.medicine_name.errors else ""),
+                               placeholder="e.g., Paracetamol 500mg", id="medicine_name") }}
+                            {% for error in form.medicine_name.errors %}
+                            <div class="invalid-feedback">{{ error }}</div>
+                            {% endfor %}
+                        </div>
+
+                        <!-- Drug Type -->
+                        <div class="col-md-4">
+                            <label for="drug_type" class="form-label fw-semibold">
+                                Drug Type <span class="text-danger">*</span>
+                            </label>
+                            {{ form.drug_type(class="form-select" + (" is-invalid" if form.drug_type.errors else ""),
+                               id="drug_type") }}
+                            {% for error in form.drug_type.errors %}
+                            <div class="invalid-feedback">{{ error }}</div>
+                            {% endfor %}
+                        </div>
+
+                        <!-- Batch Number -->
+                        <div class="col-md-4">
+                            <label for="batch_number" class="form-label fw-semibold">Batch Number</label>
+                            {{ form.batch_number(class="form-control", placeholder="e.g., BN-2024-001",
+                               id="batch_number") }}
+                        </div>
+
+                        <!-- Expiry Date -->
+                        <div class="col-md-4">
+                            <label for="expiry_date" class="form-label fw-semibold">
+                                Expiry Date <span class="text-danger">*</span>
+                            </label>
+                            {{ form.expiry_date(class="form-control" + (" is-invalid" if form.expiry_date.errors else ""),
+                               type="date", id="expiry_date") }}
+                            {% for error in form.expiry_date.errors %}
+                            <div class="invalid-feedback">{{ error }}</div>
+                            {% endfor %}
+                        </div>
+
+                        <!-- Stock Quantity -->
+                        <div class="col-md-4">
+                            <label for="stock_added" class="form-label fw-semibold">
+                                Initial Stock <span class="text-danger">*</span>
+                            </label>
+                            {{ form.stock_added(class="form-control" + (" is-invalid" if form.stock_added.errors else ""),
+                               type="number", min="0", id="stock_added", placeholder="0") }}
+                            {% for error in form.stock_added.errors %}
+                            <div class="invalid-feedback">{{ error }}</div>
+                            {% endfor %}
+                        </div>
+                    </div>
+
+                    <hr class="my-4">
+
+                    <div class="d-flex gap-2">
+                        {{ form.submit(class="btn btn-primary px-4") }}
+                        <a href="{{ url_for('medicines.list_medicines') }}" class="btn btn-outline-secondary">Cancel</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{{ url_for('static', filename='js/medicines.js') }}"></script>
+{% endblock %}

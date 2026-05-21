@@ -1,0 +1,140 @@
+{% extends 'base.html' %}
+
+{% block title %}Create Prescription - SRM Healthcare{% endblock %}
+
+{% block page_title %}Create Prescription{% endblock %}
+
+{% block breadcrumb %}
+<ol class="breadcrumb mb-0">
+    <li class="breadcrumb-item"><a href="{{ url_for('dashboard.index') }}">Home</a></li>
+    <li class="breadcrumb-item">Prescriptions</li>
+    <li class="breadcrumb-item active" aria-current="page">Create</li>
+</ol>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    .medicine-row { transition: background-color 0.2s ease; }
+    .medicine-row:hover { background-color: rgba(78,115,223,.04); }
+    .stock-badge { font-size: .75rem; }
+    .medicine-search-results {
+        position: absolute; z-index: 1050; width: 100%;
+        max-height: 250px; overflow-y: auto;
+        background: #fff; border: 1px solid #dee2e6;
+        border-radius: 0 0 8px 8px; box-shadow: 0 4px 12px rgba(0,0,0,.1);
+        display: none;
+    }
+    .medicine-search-results .search-item {
+        padding: 10px 14px; cursor: pointer; border-bottom: 1px solid #f0f0f0;
+    }
+    .medicine-search-results .search-item:hover { background: #f8f9fc; }
+    .medicine-search-results .search-item.disabled { opacity: .5; cursor: not-allowed; }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- ─── Visit Info ─── -->
+<div class="card border-0 shadow-sm mb-4">
+    <div class="card-body py-3">
+        <div class="row align-items-center">
+            <div class="col-md-4">
+                <small class="text-muted">Patient</small>
+                <h6 class="mb-0 fw-bold">{{ visit.patient.patient_name }}</h6>
+            </div>
+            <div class="col-md-2">
+                <small class="text-muted">Visit Date</small>
+                <h6 class="mb-0">{{ format_date(visit.visit_date) }}</h6>
+            </div>
+            <div class="col-md-3">
+                <small class="text-muted">Diagnosis</small>
+                <h6 class="mb-0">{{ visit.diagnosis_short or '—' }}</h6>
+            </div>
+            <div class="col-md-3">
+                <small class="text-muted">Drug Allergy</small>
+                <h6 class="mb-0 {{ 'text-danger fw-bold' if visit.patient.drug_allergy }}">
+                    {{ visit.patient.drug_allergy or 'None reported' }}
+                </h6>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ─── Prescription Form ─── -->
+<form method="POST" id="prescriptionForm" novalidate>
+    {{ form.hidden_tag() }}
+    {{ form.items_json(id="itemsJson") }}
+
+    <div class="card border-0 shadow-sm mb-4">
+        <div class="card-header bg-primary text-white py-3 d-flex justify-content-between align-items-center">
+            <h5 class="mb-0"><i class="bi bi-file-earmark-medical me-2"></i>Prescription Items</h5>
+            <button type="button" class="btn btn-light btn-sm" id="addMedicineRow">
+                <i class="bi bi-plus-circle me-1"></i> Add Medicine
+            </button>
+        </div>
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-borderless mb-0" id="medicineTable">
+                    <thead class="table-light">
+                        <tr>
+                            <th style="width: 25%">Medicine <span class="text-danger">*</span></th>
+                            <th style="width: 12%">Dosage</th>
+                            <th style="width: 12%">Frequency</th>
+                            <th style="width: 12%">Duration</th>
+                            <th style="width: 10%">Qty <span class="text-danger">*</span></th>
+                            <th style="width: 20%">Instructions</th>
+                            <th style="width: 5%"></th>
+                        </tr>
+                    </thead>
+                    <tbody id="medicineRows">
+                        <!-- Dynamic rows inserted by JS -->
+                    </tbody>
+                </table>
+            </div>
+            <div class="text-center py-4" id="emptyMessage">
+                <i class="bi bi-capsule text-muted" style="font-size: 2rem;"></i>
+                <p class="text-muted mt-2 mb-0">Click "Add Medicine" to start adding items</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- ─── Notes ─── -->
+    <div class="card border-0 shadow-sm mb-4">
+        <div class="card-body">
+            <label for="notes" class="form-label fw-semibold">
+                <i class="bi bi-journal-text me-1"></i> Prescription Notes
+            </label>
+            {{ form.notes(class="form-control", id="notes") }}
+        </div>
+    </div>
+
+    <!-- ─── Submit ─── -->
+    <div class="d-flex gap-2">
+        <button type="submit" class="btn btn-primary px-4" id="submitBtn">
+            <i class="bi bi-check-circle me-1"></i> Save Prescription
+        </button>
+        <a href="{{ url_for('dashboard.index') }}" class="btn btn-outline-secondary">Cancel</a>
+    </div>
+</form>
+
+<!-- Medicine data for JS -->
+<script>
+    window.medicineData = [
+        {% for med in medicines %}
+        {
+            id: {{ med.medicine_id }},
+            name: "{{ med.medicine_name|e }}",
+            drug_type: "{{ med.drug_type }}",
+            available_balance: {{ med.available_balance }},
+            expiry_date: "{{ med.expiry_date.strftime('%d-%b-%Y') if med.expiry_date else '' }}",
+            is_expired: {{ 'true' if med.is_expired else 'false' }},
+            batch_number: "{{ med.batch_number or '' }}"
+        }{{ ',' if not loop.last }}
+        {% endfor %}
+    ];
+    window.medicineSearchUrl = "{{ url_for('api.medicine_search') }}";
+</script>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{{ url_for('static', filename='js/prescriptions.js') }}"></script>
+{% endblock %}

@@ -1,0 +1,626 @@
+{% extends 'base.html' %}
+
+{% block title %}Edit Patient - {{ patient.patient_name }} - SRM Healthcare{% endblock %}
+
+{% block page_title %}Edit Patient{% endblock %}
+
+{% block breadcrumb %}
+<ol class="breadcrumb mb-0">
+    <li class="breadcrumb-item"><a href="{{ url_for('dashboard.index') }}">Home</a></li>
+    <li class="breadcrumb-item"><a href="{{ url_for('patients.list_patients') }}">Patients</a></li>
+    <li class="breadcrumb-item"><a href="{{ url_for('patients.view_patient', id=patient.patient_id) }}">{{ patient.patient_name }}</a></li>
+    <li class="breadcrumb-item active" aria-current="page">Edit</li>
+</ol>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    .clinical-card {
+        border: none;
+        border-radius: var(--border-radius);
+        background: var(--card-bg);
+        box-shadow: var(--shadow-md);
+        transition: transform var(--transition), box-shadow var(--transition);
+    }
+    .clinical-card:hover {
+        box-shadow: var(--shadow-lg);
+    }
+    .card-header-gradient {
+        background: linear-gradient(135deg, var(--bs-warning) 0%, var(--warning-dark) 100%);
+        color: #ffffff;
+        border-top-left-radius: var(--border-radius) !important;
+        border-top-right-radius: var(--border-radius) !important;
+        border-bottom: none;
+        padding: 1.25rem 1.5rem;
+    }
+    .form-section-title {
+        color: var(--warning);
+        font-weight: 700;
+        text-transform: uppercase;
+        font-size: 0.8rem;
+        letter-spacing: 1px;
+        margin-bottom: 1.25rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+    .form-section-title::after {
+        content: '';
+        flex-grow: 1;
+        height: 1px;
+        background: var(--card-border);
+    }
+    .btn-gradient-submit {
+        background: linear-gradient(135deg, var(--bs-warning) 0%, var(--warning-dark) 100%);
+        color: #ffffff;
+        border: none;
+        box-shadow: 0 4px 10px rgba(217, 119, 6, 0.25);
+        font-weight: 600;
+        transition: all var(--transition);
+    }
+    .btn-gradient-submit:hover {
+        background: linear-gradient(135deg, var(--warning) 0%, var(--bs-warning) 100%);
+        color: #ffffff;
+        transform: translateY(-1px);
+        box-shadow: 0 6px 14px rgba(217, 119, 6, 0.35);
+    }
+    .btn-outline-custom {
+        border-color: var(--card-border);
+        color: var(--text-secondary);
+        font-weight: 500;
+    }
+    .btn-outline-custom:hover {
+        background: #f8fafc;
+        color: var(--text-primary);
+        border-color: var(--text-light);
+    }
+    .prescription-table th {
+        font-weight: 600;
+        color: var(--text-secondary);
+        font-size: 0.85rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        background-color: #f8fafc;
+        border-bottom: 2px solid var(--card-border);
+    }
+    .prescription-table td {
+        padding: 0.6rem 0.5rem;
+    }
+    .table-input {
+        border: 1px solid var(--card-border);
+        border-radius: 6px;
+        font-size: 0.875rem;
+        padding: 0.35rem 0.5rem;
+        transition: border-color 0.2s, box-shadow 0.2s;
+        width: 100%;
+    }
+    .table-input:focus {
+        border-color: var(--warning);
+        box-shadow: 0 0 0 2px rgba(245, 158, 11, 0.15);
+        outline: none;
+    }
+    .table-input.is-invalid {
+        border-color: var(--bs-danger);
+        background-image: none; /* remove default bootstrap error icons in small inputs */
+        padding-right: 0.5rem;
+    }
+    .table-input.is-valid {
+        border-color: var(--bs-success);
+        background-image: none;
+        padding-right: 0.5rem;
+    }
+    .med-select {
+        cursor: pointer;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-3">
+    <div class="row justify-content-center">
+        <div class="col-12 col-xl-10">
+            <div class="card clinical-card">
+                <div class="card-header card-header-gradient">
+                    <h5 class="card-title mb-0 d-flex align-items-center">
+                        <i class="bi bi-pencil-square me-2 fs-4"></i>
+                        <span>Edit Patient Demographics & Medications</span>
+                    </h5>
+                </div>
+                <div class="card-body p-4">
+                    <form method="POST" id="editPatientForm" action="{{ url_for('patients.edit_patient', id=patient.patient_id) }}" novalidate>
+                        {{ form.hidden_tag() }}
+                        
+                        <!-- Hidden Field for JSON Items serialization -->
+                        {{ form.items_json(id="itemsJson", type="hidden") }}
+
+                        <!-- Patient Demographics Section -->
+                        <div class="form-section-title">
+                            <i class="bi bi-person-bounding-box"></i>
+                            Demographics Info
+                        </div>
+
+                        <div class="row g-3 mb-4">
+                            <div class="col-md-6">
+                                <label for="patient_name" class="form-label fw-semibold">Patient Name <span class="text-danger">*</span></label>
+                                {{ form.patient_name(id='patient_name', class='form-control') }}
+                                <div class="invalid-feedback name-feedback"></div>
+                                {% for error in form.patient_name.errors %}
+                                    <div class="invalid-feedback d-block">{{ error }}</div>
+                                {% endfor %}
+                            </div>
+                            <div class="col-md-3">
+                                <label for="age" class="form-label fw-semibold">Age <span class="text-danger">*</span></label>
+                                {{ form.age(id='age', class='form-control', min='1', max='120') }}
+                                <div class="invalid-feedback age-feedback"></div>
+                                {% for error in form.age.errors %}
+                                    <div class="invalid-feedback d-block">{{ error }}</div>
+                                {% endfor %}
+                            </div>
+                            <div class="col-md-3">
+                                <label for="gender" class="form-label fw-semibold">Gender <span class="text-danger">*</span></label>
+                                {{ form.gender(id='gender', class='form-select') }}
+                                <div class="invalid-feedback gender-feedback"></div>
+                                {% for error in form.gender.errors %}
+                                    <div class="invalid-feedback d-block">{{ error }}</div>
+                                {% endfor %}
+                            </div>
+                        </div>
+
+                        <div class="row g-3 mb-4">
+                            <div class="col-md-6">
+                                <label for="designation" class="form-label fw-semibold">Designation <span class="text-danger">*</span></label>
+                                {{ form.designation(id='designation', class='form-control') }}
+                                <div class="invalid-feedback designation-feedback"></div>
+                                {% for error in form.designation.errors %}
+                                    <div class="invalid-feedback d-block">{{ error }}</div>
+                                {% endfor %}
+                            </div>
+                        </div>
+
+                        <!-- Medical Information Section -->
+                        <div class="form-section-title">
+                            <i class="bi bi-heart-pulse"></i>
+                            Medical Diagnosis & Symptoms
+                        </div>
+
+                        <div class="row g-3 mb-4">
+                            <div class="col-12">
+                                <label for="medical_history" class="form-label fw-semibold">Medical Information</label>
+                                {{ form.medical_history(id='medical_history', class='form-control', rows='4') }}
+                                {% for error in form.medical_history.errors %}
+                                    <div class="invalid-feedback d-block">{{ error }}</div>
+                                {% endfor %}
+                            </div>
+                        </div>
+
+                        <!-- Prescribed Medications Section -->
+                        <div class="form-section-title mt-4">
+                            <i class="bi bi-capsule"></i>
+                            Prescribed Medications & Stock Reconcile
+                        </div>
+
+                        <div class="table-responsive mb-3">
+                            <table class="table table-hover align-middle border prescription-table" id="prescriptionTable">
+                                <thead>
+                                    <tr>
+                                        <th style="min-width: 250px;">Medicine Name <span class="text-danger">*</span></th>
+                                        <th style="width: 120px;">Dosage</th>
+                                        <th style="width: 140px;">Frequency</th>
+                                        <th style="width: 110px;">Duration</th>
+                                        <th style="width: 95px;">Quantity <span class="text-danger">*</span></th>
+                                        <th>Instructions</th>
+                                        <th style="width: 50px;" class="text-center">Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="prescriptionTableBody">
+                                    <!-- Dynamic rows loaded via Javascript -->
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <div class="text-end mb-4">
+                            <button type="button" class="btn btn-outline-warning btn-sm" id="addMedicineBtn">
+                                <i class="bi bi-plus-circle me-1"></i> Add Medication
+                            </button>
+                        </div>
+
+                        <!-- Actions Grid -->
+                        <div class="row pt-3 border-top mt-4">
+                            <div class="col-6">
+                                <a href="{{ url_for('patients.view_patient', id=patient.patient_id) }}" class="btn btn-outline-custom px-4 py-2">
+                                    <i class="bi bi-arrow-left me-1"></i> Cancel
+                                </a>
+                            </div>
+                            <div class="col-6 text-end">
+                                <button type="submit" class="btn btn-gradient-submit px-5 py-2">
+                                    <i class="bi bi-check-circle me-1"></i> Update Patient
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Quick Information -->
+            <div class="card border-0 shadow-sm mt-3 bg-light">
+                <div class="card-body py-2 px-3 text-center">
+                    <small class="text-muted">
+                        <i class="bi bi-info-circle me-1"></i>
+                        Registered on {{ patient.created_at.strftime('%d-%b-%Y') if patient.created_at else 'Unknown' }}
+                        &middot; Total doctor visits: <strong>{{ patient.total_visits }}</strong>
+                    </small>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Preload medicine stock and status data (id, name, stock balance, expiry)
+    window.medicineStocks = {
+        {% for med in medicines %}
+        "{{ med.medicine_id }}": {
+            name: "{{ med.medicine_name|e }}",
+            stock: {{ med.available_balance }},
+            expired: {{ 'true' if med.is_expired else 'false' }}
+        }{{ ',' if not loop.last }}
+        {% endfor %}
+    };
+
+    // Client-side state model for medicines
+    let prescriptionItems = [];
+
+    // Tracks initial quantities that are already deducted in the database
+    window.originalQuantities = {};
+
+    // HTML escape utility to secure text inputs in tables
+    function escapeHtml(str) {
+        if (!str) return '';
+        return str
+            .replace(/&/g, "&amp;")
+            .replace(/</g, "&lt;")
+            .replace(/>/g, "&gt;")
+            .replace(/"/g, "&quot;")
+            .replace(/'/g, "&#039;");
+    }
+
+    // Mathematical stock check bounds: maximum quantity allowed on frontend is original prescription quantity + database balance
+    function getMaxAllowedQuantity(medicineId) {
+        if (!medicineId || medicineId === 0) return 0;
+        const originalQty = window.originalQuantities[medicineId] || 0;
+        const stockData = window.medicineStocks[medicineId];
+        const availableStock = stockData ? stockData.stock : 0;
+        return originalQty + availableStock;
+    }
+
+    // Build select dropdown option listing, excluding expired medicines unless previously prescribed
+    function renderMedicineOptions(selectedMedId) {
+        let html = `<option value="0">-- Select Medicine --</option>`;
+        for (const medId in window.medicineStocks) {
+            const med = window.medicineStocks[medId];
+            
+            // Skip expired medicines unless they are the currently prescribed one in this row
+            if (med.expired && medId != selectedMedId) {
+                continue;
+            }
+            
+            const isSelected = medId == selectedMedId ? 'selected' : '';
+            const maxQty = getMaxAllowedQuantity(medId);
+            
+            html += `<option value="${medId}" ${isSelected}>${escapeHtml(med.name)} (Max: ${maxQty})</option>`;
+        }
+        return html;
+    }
+
+    // Serialize model state to the hidden WTForms field
+    function syncStateToHiddenInput() {
+        const inputField = document.getElementById('itemsJson');
+        if (inputField) {
+            inputField.value = JSON.stringify(prescriptionItems);
+        }
+    }
+
+    // Handle modification of individual fields inside the table rows
+    function updateItemField(index, field, value, element) {
+        const item = prescriptionItems[index];
+        if (!item) return;
+
+        if (field === 'medicine_id') {
+            const medId = parseInt(value) || 0;
+            item.medicine_id = medId;
+            const stockData = window.medicineStocks[medId];
+            item.medicine_name = stockData ? stockData.name : '';
+            
+            // Update quantity max limit dynamically in row
+            const row = element.closest('tr');
+            const qtyInput = row.querySelector('.quantity-input');
+            const maxQty = getMaxAllowedQuantity(medId);
+            qtyInput.max = maxQty;
+            
+            if (item.quantity > maxQty) {
+                item.quantity = Math.max(1, maxQty);
+                qtyInput.value = item.quantity;
+            }
+            
+            validateRowElement(row, item, index);
+        } else if (field === 'quantity') {
+            const qtyVal = parseInt(value) || 0;
+            item.quantity = qtyVal;
+            
+            const row = element.closest('tr');
+            validateRowElement(row, item, index);
+        } else {
+            item[field] = value;
+        }
+
+        syncStateToHiddenInput();
+    }
+
+    // Row-level validation state visualizers
+    function validateRowElement(row, item, index) {
+        const medSelect = row.querySelector('.med-select');
+        const qtyInput = row.querySelector('.quantity-input');
+        
+        let isRowValid = true;
+        
+        // Reset validation classes
+        medSelect.classList.remove('is-invalid', 'is-valid');
+        qtyInput.classList.remove('is-invalid', 'is-valid');
+        
+        const medFeedback = row.querySelector('.med-feedback');
+        const qtyFeedback = row.querySelector('.qty-feedback');
+        
+        if (medFeedback) medFeedback.textContent = '';
+        if (qtyFeedback) qtyFeedback.textContent = '';
+        
+        // 1. Medicine selection checks
+        if (!item.medicine_id || item.medicine_id === 0) {
+            medSelect.classList.add('is-invalid');
+            if (medFeedback) medFeedback.textContent = 'Please select a medicine.';
+            isRowValid = false;
+        } else {
+            // Check for duplicate prescriptions in the table
+            const duplicateIndex = prescriptionItems.findIndex((other, idx) => idx !== index && other.medicine_id === item.medicine_id);
+            if (duplicateIndex !== -1) {
+                medSelect.classList.add('is-invalid');
+                if (medFeedback) medFeedback.textContent = 'Duplicate medicine.';
+                isRowValid = false;
+            } else {
+                medSelect.classList.add('is-valid');
+            }
+        }
+        
+        // 2. Quantity checks against stock constraints
+        if (item.medicine_id && item.medicine_id !== 0) {
+            const maxQty = getMaxAllowedQuantity(item.medicine_id);
+            if (item.quantity <= 0) {
+                qtyInput.classList.add('is-invalid');
+                if (qtyFeedback) qtyFeedback.textContent = 'Must be at least 1.';
+                isRowValid = false;
+            } else if (item.quantity > maxQty) {
+                qtyInput.classList.add('is-invalid');
+                if (qtyFeedback) qtyFeedback.textContent = `Exceeds max (${maxQty}).`;
+                isRowValid = false;
+            } else {
+                qtyInput.classList.add('is-valid');
+            }
+        }
+        
+        return isRowValid;
+    }
+
+    // Render prescription table with current model data
+    function renderTable() {
+        const tbody = document.getElementById('prescriptionTableBody');
+        tbody.innerHTML = '';
+
+        if (prescriptionItems.length === 0) {
+            tbody.innerHTML = `
+                <tr id="emptyRow">
+                    <td colspan="7" class="text-center py-4 text-muted">
+                        <i class="bi bi-info-circle me-1"></i> No medicines prescribed. Click <strong>Add Medication</strong> below to prescribe.
+                    </td>
+                </tr>
+            `;
+            return;
+        }
+
+        prescriptionItems.forEach((item, index) => {
+            const row = document.createElement('tr');
+            row.setAttribute('data-index', index);
+            row.innerHTML = `
+                <td>
+                    <select class="form-select form-select-sm table-input med-select" onchange="updateItemField(${index}, 'medicine_id', this.value, this)">
+                        ${renderMedicineOptions(item.medicine_id)}
+                    </select>
+                    <div class="invalid-feedback med-feedback d-block" style="font-size: 0.75rem;"></div>
+                </td>
+                <td>
+                    <input type="text" class="form-control form-control-sm table-input dosage-input" value="${escapeHtml(item.dosage)}" oninput="updateItemField(${index}, 'dosage', this.value, this)">
+                </td>
+                <td>
+                    <input type="text" class="form-control form-control-sm table-input frequency-input" value="${escapeHtml(item.frequency)}" oninput="updateItemField(${index}, 'frequency', this.value, this)">
+                </td>
+                <td>
+                    <input type="text" class="form-control form-control-sm table-input duration-input" value="${escapeHtml(item.duration)}" oninput="updateItemField(${index}, 'duration', this.value, this)">
+                </td>
+                <td>
+                    <input type="number" class="form-control form-control-sm table-input quantity-input" min="1" max="${getMaxAllowedQuantity(item.medicine_id)}" value="${item.quantity}" oninput="updateItemField(${index}, 'quantity', this.value, this)">
+                    <div class="invalid-feedback qty-feedback d-block" style="font-size: 0.75rem;"></div>
+                </td>
+                <td>
+                    <input type="text" class="form-control form-control-sm table-input instructions-input" value="${escapeHtml(item.instructions)}" oninput="updateItemField(${index}, 'instructions', this.value, this)">
+                </td>
+                <td class="text-center">
+                    <button type="button" class="btn btn-outline-danger btn-sm border-0" onclick="removeItem(${index})">
+                        <i class="bi bi-trash"></i>
+                    </button>
+                </td>
+            `;
+            tbody.appendChild(row);
+            
+            // Validate this row immediately on initial rendering
+            validateRowElement(row, item, index);
+        });
+    }
+
+    // Append new medicine item to model
+    function addItem() {
+        prescriptionItems.push({
+            medicine_id: 0,
+            medicine_name: '',
+            quantity: 1,
+            dosage: '',
+            frequency: '',
+            duration: '',
+            instructions: ''
+        });
+        renderTable();
+        syncStateToHiddenInput();
+    }
+
+    // Remove medicine item from model
+    function removeItem(index) {
+        prescriptionItems.splice(index, 1);
+        renderTable();
+        syncStateToHiddenInput();
+    }
+
+    // Batch validate all table prescription items
+    function validateAllRows() {
+        let allValid = true;
+        const rows = document.querySelectorAll('#prescriptionTableBody tr');
+        
+        rows.forEach(row => {
+            const indexAttr = row.getAttribute('data-index');
+            if (indexAttr === null) return; // e.g. empty row
+            
+            const index = parseInt(indexAttr);
+            const item = prescriptionItems[index];
+            if (item) {
+                const isRowValid = validateRowElement(row, item, index);
+                if (!isRowValid) {
+                    allValid = false;
+                }
+            }
+        });
+        return allValid;
+    }
+
+    // Main setup
+    document.addEventListener('DOMContentLoaded', function () {
+        const editForm = document.getElementById('editPatientForm');
+        const itemsJsonField = document.getElementById('itemsJson');
+        const addBtn = document.getElementById('addMedicineBtn');
+
+        // Load existing items from WTForms serialized value
+        if (itemsJsonField && itemsJsonField.value) {
+            try {
+                prescriptionItems = JSON.parse(itemsJsonField.value);
+                
+                // Initialize original quantity tracking map
+                prescriptionItems.forEach(item => {
+                    if (item.medicine_id) {
+                        window.originalQuantities[item.medicine_id] = parseInt(item.quantity) || 0;
+                    }
+                });
+            } catch (e) {
+                console.error("Failed to parse initial items JSON:", e);
+                prescriptionItems = [];
+            }
+        }
+
+        // Render initial view
+        renderTable();
+
+        // Connect row adder
+        addBtn.addEventListener('click', addItem);
+
+        // Core form validator on submit
+        editForm.addEventListener('submit', function (e) {
+            let formValid = true;
+
+            // Demographics Name Validation
+            const nameEl = document.getElementById('patient_name');
+            nameEl.classList.remove('is-invalid', 'is-valid');
+            const nameFeedback = editForm.querySelector('.name-feedback');
+            if (nameFeedback) nameFeedback.textContent = '';
+
+            if (!nameEl.value.trim()) {
+                nameEl.classList.add('is-invalid');
+                if (nameFeedback) nameFeedback.textContent = "Patient name is required.";
+                formValid = false;
+            } else if (nameEl.value.trim().length < 2 || nameEl.value.trim().length > 100) {
+                nameEl.classList.add('is-invalid');
+                if (nameFeedback) nameFeedback.textContent = "Name must be between 2 and 100 characters.";
+                formValid = false;
+            } else {
+                nameEl.classList.add('is-valid');
+            }
+
+            // Demographics Age Validation
+            const ageEl = document.getElementById('age');
+            ageEl.classList.remove('is-invalid', 'is-valid');
+            const ageFeedback = editForm.querySelector('.age-feedback');
+            if (ageFeedback) ageFeedback.textContent = '';
+
+            const ageVal = parseInt(ageEl.value) || 0;
+            if (!ageEl.value || ageVal <= 0 || ageVal > 120) {
+                ageEl.classList.add('is-invalid');
+                if (ageFeedback) ageFeedback.textContent = "Please enter a valid age between 1 and 120.";
+                formValid = false;
+            } else {
+                ageEl.classList.add('is-valid');
+            }
+
+            // Demographics Gender Validation
+            const genderEl = document.getElementById('gender');
+            genderEl.classList.remove('is-invalid', 'is-valid');
+            const genderFeedback = editForm.querySelector('.gender-feedback');
+            if (genderFeedback) genderFeedback.textContent = '';
+
+            if (!genderEl.value) {
+                genderEl.classList.add('is-invalid');
+                if (genderFeedback) genderFeedback.textContent = "Please select a gender.";
+                formValid = false;
+            } else {
+                genderEl.classList.add('is-valid');
+            }
+
+            // Demographics Designation Validation
+            const designationEl = document.getElementById('designation');
+            designationEl.classList.remove('is-invalid', 'is-valid');
+            const designationFeedback = editForm.querySelector('.designation-feedback');
+            if (designationFeedback) designationFeedback.textContent = '';
+
+            if (!designationEl.value.trim()) {
+                designationEl.classList.add('is-invalid');
+                if (designationFeedback) designationFeedback.textContent = "Designation is required.";
+                formValid = false;
+            } else if (designationEl.value.trim().length > 100) {
+                designationEl.classList.add('is-invalid');
+                if (designationFeedback) designationFeedback.textContent = "Designation must be under 100 characters.";
+                formValid = false;
+            } else {
+                designationEl.classList.add('is-valid');
+            }
+
+            // Prescription Table validation
+            if (!validateAllRows()) {
+                formValid = false;
+            }
+
+            if (!formValid) {
+                e.preventDefault();
+                // Focus on the first element containing is-invalid
+                const firstInvalid = editForm.querySelector('.is-invalid');
+                if (firstInvalid) {
+                    firstInvalid.focus();
+                }
+            }
+        });
+    });
+</script>
+{% endblock %}

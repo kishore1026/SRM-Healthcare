@@ -1,0 +1,422 @@
+{% extends 'base.html' %}
+
+{% block title %}Dashboard - SRM Healthcare{% endblock %}
+
+{% block page_title %}Dashboard{% endblock %}
+
+{% block breadcrumb %}
+<ol class="breadcrumb mb-0">
+    <li class="breadcrumb-item active" aria-current="page">Dashboard</li>
+</ol>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* ── Summary Cards ── */
+    .stat-card {
+        border: none;
+        border-radius: 12px;
+        border-left: 5px solid;
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+        background: #fff;
+    }
+    .stat-card:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 8px 25px rgba(0,0,0,.12);
+    }
+    .stat-card.border-primary   { border-left-color: #4e73df !important; }
+    .stat-card.border-success   { border-left-color: #1cc88a !important; }
+    .stat-card.border-info      { border-left-color: #36b9cc !important; }
+    .stat-card.border-warning   { border-left-color: #f6c23e !important; }
+    .stat-card.border-danger    { border-left-color: #e74a3b !important; }
+    .stat-card.border-secondary { border-left-color: #858796 !important; }
+
+    .stat-card .stat-icon {
+        font-size: 2rem;
+        opacity: .25;
+    }
+    .stat-card .stat-value {
+        font-size: 1.75rem;
+        font-weight: 800;
+        line-height: 1;
+    }
+    .stat-card .stat-label {
+        font-size: .75rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: .05em;
+    }
+
+    /* ── Count-up animation ── */
+    .count-up { display: inline-block; }
+
+    /* ── Time Filter Buttons ── */
+    .time-filters .btn { border-radius: 20px; font-size: .8rem; font-weight: 600; }
+    .time-filters .btn.active { box-shadow: 0 2px 8px rgba(78,115,223,.35); }
+
+    /* ── Chart Cards ── */
+    .chart-card {
+        border: none;
+        border-radius: 12px;
+        box-shadow: 0 2px 12px rgba(0,0,0,.06);
+    }
+    .chart-card .card-header {
+        background: transparent;
+        border-bottom: 1px solid rgba(0,0,0,.06);
+        font-weight: 700;
+    }
+
+    /* ── Alert Badges ── */
+    .alert-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 8px 16px;
+        border-radius: 30px;
+        font-weight: 600;
+        font-size: .85rem;
+        text-decoration: none;
+        transition: all 0.2s ease;
+        border: 1px solid transparent;
+    }
+    .alert-badge:hover { 
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+    }
+    .alert-badge .pulse {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        display: inline-block;
+        animation: pulse 1.5s infinite;
+    }
+    @keyframes pulse {
+        0%   { opacity: 1; transform: scale(1); }
+        50%  { opacity: .5; transform: scale(1.4); }
+        100% { opacity: 1; transform: scale(1); }
+    }
+    
+    /* Alert Badge Variants (High Contrast Orange, Blue, Red) */
+    .alert-badge.badge-low-stock {
+        background-color: #fff7ed;
+        color: #ea580c;
+        border-color: #ffedd5;
+    }
+    .alert-badge.badge-low-stock:hover {
+        background-color: #ffedd5;
+    }
+    .alert-badge.badge-low-stock .pulse {
+        background-color: #ea580c;
+    }
+    
+    .alert-badge.badge-expiring {
+        background-color: #eff6ff;
+        color: #2563eb;
+        border-color: #dbeafe;
+    }
+    .alert-badge.badge-expiring:hover {
+        background-color: #dbeafe;
+    }
+    .alert-badge.badge-expiring .pulse {
+        background-color: #2563eb;
+    }
+    
+    .alert-badge.badge-expired {
+        background-color: #fef2f2;
+        color: #dc2626;
+        border-color: #fee2e2;
+    }
+    .alert-badge.badge-expired:hover {
+        background-color: #fee2e2;
+    }
+    .alert-badge.badge-expired .pulse {
+        background-color: #dc2626;
+    }
+
+    /* ── Recent Visits ── */
+    .recent-table th { font-size: .75rem; text-transform: uppercase; letter-spacing: .05em; }
+    .recent-table td { vertical-align: middle; }
+
+    /* ── Comparison Badge ── */
+    .comparison-badge { font-size: .8rem; font-weight: 600; }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- ─── Time Filter ─── -->
+<div class="d-flex flex-wrap justify-content-between align-items-center mb-4">
+    <h5 class="fw-bold text-muted mb-2 mb-md-0">
+        <i class="bi bi-bar-chart-fill me-1"></i> Overview
+    </h5>
+    <div class="time-filters btn-group" role="group">
+        <a href="{{ url_for('dashboard.index', period='today') }}"
+           class="btn btn-outline-primary btn-sm {{ 'active' if period=='today' }}">Today</a>
+        <a href="{{ url_for('dashboard.index', period='week') }}"
+           class="btn btn-outline-primary btn-sm {{ 'active' if period=='week' }}">This Week</a>
+        <a href="{{ url_for('dashboard.index', period='month') }}"
+           class="btn btn-outline-primary btn-sm {{ 'active' if period=='month' }}">This Month</a>
+        <a href="{{ url_for('dashboard.index', period='overall') }}"
+           class="btn btn-outline-primary btn-sm {{ 'active' if period=='overall' }}">Overall</a>
+    </div>
+</div>
+
+<!-- ─── Summary Cards Row ─── -->
+<div class="row g-3 mb-4">
+    <!-- Total Patients -->
+    <div class="col-xl-2 col-md-4 col-sm-6">
+        <div class="card stat-card border-primary h-100">
+            <div class="card-body d-flex justify-content-between align-items-center py-3">
+                <div>
+                    <div class="stat-label text-primary">Total Patients</div>
+                    <div class="stat-value text-dark count-up" data-target="{{ stats.total_patients }}">0</div>
+                </div>
+                <i class="bi bi-people-fill stat-icon text-primary"></i>
+            </div>
+        </div>
+    </div>
+    <!-- Total Visits -->
+    <div class="col-xl-2 col-md-4 col-sm-6">
+        <div class="card stat-card border-success h-100">
+            <div class="card-body d-flex justify-content-between align-items-center py-3">
+                <div>
+                    <div class="stat-label text-success">Total Visits</div>
+                    <div class="stat-value text-dark count-up" data-target="{{ stats.total_visits }}">0</div>
+                    {% if comparison %}
+                    <small class="comparison-badge {{ 'text-success' if comparison.change_pct >= 0 else 'text-danger' }}">
+                        <i class="bi bi-{{ 'arrow-up' if comparison.change_pct >= 0 else 'arrow-down' }}"></i>
+                        {{ comparison.change_pct }}% vs last month
+                    </small>
+                    {% endif %}
+                </div>
+                <i class="bi bi-calendar2-check-fill stat-icon text-success"></i>
+            </div>
+        </div>
+    </div>
+    <!-- Top Diseases -->
+    <div class="col-xl-2 col-md-4 col-sm-6">
+        <div class="card stat-card border-info h-100">
+            <div class="card-body py-3">
+                <div class="stat-label text-info mb-2">Top Diseases</div>
+                {% if stats.top_diseases %}
+                    {% for d in stats.top_diseases %}
+                    <div class="d-flex justify-content-between align-items-center mb-1">
+                        <small class="text-truncate me-2" title="{{ d.name }}">{{ d.name }}</small>
+                        <span class="badge bg-info rounded-pill">{{ d.count }}</span>
+                    </div>
+                    {% endfor %}
+                {% else %}
+                    <small class="text-muted">No data</small>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    <!-- Total Medicines -->
+    <div class="col-xl-2 col-md-4 col-sm-6">
+        <div class="card stat-card border-secondary h-100">
+            <div class="card-body d-flex justify-content-between align-items-center py-3">
+                <div>
+                    <div class="stat-label text-secondary">Total Medicines</div>
+                    <div class="stat-value text-dark count-up" data-target="{{ stats.total_medicines }}">0</div>
+                </div>
+                <i class="bi bi-capsule stat-icon text-secondary"></i>
+            </div>
+        </div>
+    </div>
+    <!-- Low Stock -->
+    <div class="col-xl-2 col-md-4 col-sm-6">
+        <div class="card stat-card border-warning h-100">
+            <div class="card-body d-flex justify-content-between align-items-center py-3">
+                <div>
+                    <div class="stat-label text-warning">Low Stock</div>
+                    <div class="stat-value text-dark count-up" data-target="{{ stats.low_stock_count }}">0</div>
+                </div>
+                <i class="bi bi-exclamation-triangle-fill stat-icon text-warning"></i>
+            </div>
+        </div>
+    </div>
+    <!-- Expiring -->
+    <div class="col-xl-2 col-md-4 col-sm-6">
+        <div class="card stat-card border-danger h-100">
+            <div class="card-body d-flex justify-content-between align-items-center py-3">
+                <div>
+                    <div class="stat-label text-danger">Expiring Soon</div>
+                    <div class="stat-value text-dark count-up" data-target="{{ stats.expiring_count }}">0</div>
+                </div>
+                <i class="bi bi-clock-history stat-icon text-danger"></i>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ─── Alert Badges ─── -->
+{% if stats.low_stock_count > 0 or stats.expiring_count > 0 or stats.expired_count > 0 %}
+<div class="d-flex flex-wrap gap-2 mb-4">
+    {% if stats.low_stock_count > 0 %}
+    <a href="{{ url_for('medicines.alerts', tab='low_stock') }}" class="alert-badge badge-low-stock">
+        <span class="pulse"></span>
+        {{ stats.low_stock_count }} Low Stock
+    </a>
+    {% endif %}
+    {% if stats.expiring_count > 0 %}
+    <a href="{{ url_for('medicines.alerts', tab='expiring') }}" class="alert-badge badge-expiring">
+        <span class="pulse"></span>
+        {{ stats.expiring_count }} Expiring Soon
+    </a>
+    {% endif %}
+    {% if stats.expired_count > 0 %}
+    <a href="{{ url_for('medicines.alerts', tab='expired') }}" class="alert-badge badge-expired">
+        <span class="pulse"></span>
+        {{ stats.expired_count }} Expired
+    </a>
+    {% endif %}
+</div>
+{% endif %}
+
+<!-- ─── Charts Row ─── -->
+<div class="row g-4 mb-4">
+    <!-- Disease Distribution Pie -->
+    <div class="col-lg-4">
+        <div class="card chart-card h-100">
+            <div class="card-header py-3">
+                <i class="bi bi-pie-chart-fill me-1 text-primary"></i> Disease Distribution
+            </div>
+            <div class="card-body d-flex align-items-center justify-content-center">
+                <canvas id="diseasePieChart" style="max-height: 280px;"></canvas>
+            </div>
+        </div>
+    </div>
+    <!-- Top 10 Diseases Bar -->
+    <div class="col-lg-4">
+        <div class="card chart-card h-100">
+            <div class="card-header py-3">
+                <i class="bi bi-bar-chart-fill me-1 text-success"></i> Top 10 Diseases
+            </div>
+            <div class="card-body">
+                <canvas id="diseaseBarChart" style="max-height: 280px;"></canvas>
+            </div>
+        </div>
+    </div>
+    <!-- Visit Trend Line -->
+    <div class="col-lg-4">
+        <div class="card chart-card h-100">
+            <div class="card-header py-3">
+                <i class="bi bi-graph-up me-1 text-info"></i> Visit Trend (30 Days)
+            </div>
+            <div class="card-body">
+                <canvas id="visitTrendChart" style="max-height: 280px;"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ─── Recent Visits & Medicine Alerts ─── -->
+<div class="row g-4">
+    <!-- Recent Visits -->
+    <div class="col-lg-8">
+        <div class="card chart-card">
+            <div class="card-header py-3 d-flex justify-content-between align-items-center">
+                <span><i class="bi bi-clock-fill me-1 text-primary"></i> Recent Visits</span>
+                <a href="{{ url_for('visits.index') }}" class="btn btn-sm btn-outline-primary">View All</a>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover recent-table mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Date</th>
+                                <th>Patient</th>
+                                <th>Diagnosis</th>
+                                <th>Doctor</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for visit in recent_visits %}
+                            <tr>
+                                <td>
+                                    <small class="fw-semibold">{{ format_date(visit.visit_date) }}</small><br>
+                                    <small class="text-muted">{{ format_time(visit.visit_time) }}</small>
+                                </td>
+                                <td><span style="color: #2563eb; font-weight: 600;">{{ visit.patient.patient_name }}</span></td>
+                                <td>
+                                    <span class="text-truncate d-inline-block" style="max-width:200px;" title="{{ visit.diagnosis }}">
+                                        {{ visit.diagnosis_short }}
+                                    </span>
+                                </td>
+                                <td><small style="color: #ea580c; font-weight: 600;"><i class="bi bi-person-badge-fill me-1"></i>{{ visit.doctor.doctor_name }}</small></td>
+                            </tr>
+                            {% else %}
+                            <tr>
+                                <td colspan="4" class="text-center text-muted py-4">No recent visits</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Medicine Alerts Sidebar -->
+    <div class="col-lg-4">
+        <!-- Low Stock -->
+        <div class="card chart-card mb-3">
+            <div class="card-header py-3 text-warning">
+                <i class="bi bi-exclamation-triangle-fill me-1"></i> Low Stock Medicines
+            </div>
+            <div class="card-body p-0">
+                <ul class="list-group list-group-flush">
+                    {% for med in low_stock %}
+                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                        <div>
+                            <small class="fw-semibold" style="color: #ea580c;">{{ med.medicine_name }}</small><br>
+                            <small class="text-muted">{{ med.drug_type }}</small>
+                        </div>
+                        <span class="badge bg-warning text-dark rounded-pill">{{ med.available_balance }}</span>
+                    </li>
+                    {% else %}
+                    <li class="list-group-item text-center text-muted py-3">
+                        <i class="bi bi-check-circle text-success"></i> All stocks healthy
+                    </li>
+                    {% endfor %}
+                </ul>
+            </div>
+        </div>
+
+        <!-- Expiring Soon -->
+        <div class="card chart-card mb-3">
+            <div class="card-header py-3 text-danger">
+                <i class="bi bi-clock-history me-1"></i> Expiring Soon
+            </div>
+            <div class="card-body p-0">
+                <ul class="list-group list-group-flush">
+                    {% for med in expiring %}
+                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                        <div>
+                            <small class="fw-semibold" style="color: #2563eb;">{{ med.medicine_name }}</small><br>
+                            <small class="text-muted">Expires: {{ format_date(med.expiry_date) }}</small>
+                        </div>
+                        <span class="badge bg-danger rounded-pill">{{ med.days_until_expiry }}d</span>
+                    </li>
+                    {% else %}
+                    <li class="list-group-item text-center text-muted py-3">
+                        <i class="bi bi-check-circle text-success"></i> No expiring medicines
+                    </li>
+                    {% endfor %}
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{{ url_for('static', filename='js/dashboard.js') }}"></script>
+<script>
+    // Pass period and API URLs to the dashboard JS
+    window.dashboardConfig = {
+        period: '{{ period }}',
+        diseaseChartUrl: '{{ url_for("api.disease_chart") }}',
+        visitTrendUrl: '{{ url_for("api.visit_trend") }}',
+    };
+</script>
+{% endblock %}

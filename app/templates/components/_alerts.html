@@ -1,0 +1,32 @@
+{% if get_flashed_messages(with_categories=true) %}
+<div class="alerts-container" id="alertsContainer">
+    {% for category, message in get_flashed_messages(with_categories=true) %}
+    <div class="alert alert-{{ category }} alert-dismissible fade show d-flex align-items-center shadow-sm" role="alert">
+        {% if category == 'success' %}
+            <i class="bi bi-check-circle-fill me-2 fs-5"></i>
+        {% elif category == 'danger' or category == 'error' %}
+            <i class="bi bi-exclamation-triangle-fill me-2 fs-5"></i>
+        {% elif category == 'warning' %}
+            <i class="bi bi-exclamation-circle-fill me-2 fs-5"></i>
+        {% elif category == 'info' %}
+            <i class="bi bi-info-circle-fill me-2 fs-5"></i>
+        {% else %}
+            <i class="bi bi-bell-fill me-2 fs-5"></i>
+        {% endif %}
+        <div>{{ message }}</div>
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+    {% endfor %}
+</div>
+
+<script>
+    // Auto-dismiss alerts after 5 seconds
+    setTimeout(function () {
+        const alerts = document.querySelectorAll('#alertsContainer .alert');
+        alerts.forEach(function (alert) {
+            const bsAlert = bootstrap.Alert.getOrCreateInstance(alert);
+            bsAlert.close();
+        });
+    }, 5000);
+</script>
+{% endif %}

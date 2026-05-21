@@ -1,0 +1,190 @@
+{% extends 'base.html' %}
+
+{% block title %}Medicine Alerts - SRM Healthcare{% endblock %}
+
+{% block page_title %}Medicine Alerts{% endblock %}
+
+{% block breadcrumb %}
+<ol class="breadcrumb mb-0">
+    <li class="breadcrumb-item"><a href="{{ url_for('dashboard.index') }}">Home</a></li>
+    <li class="breadcrumb-item"><a href="{{ url_for('medicines.list_medicines') }}">Medicines</a></li>
+    <li class="breadcrumb-item active" aria-current="page">Alerts</li>
+</ol>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    .alert-tab-badge {
+        position: relative;
+        top: -2px;
+    }
+    .alert-medicine-card {
+        border-left: 4px solid;
+        transition: transform 0.15s ease;
+    }
+    .alert-medicine-card:hover {
+        transform: translateX(4px);
+    }
+    .alert-medicine-card.border-warning { border-left-color: #f6c23e !important; }
+    .alert-medicine-card.border-info    { border-left-color: #36b9cc !important; }
+    .alert-medicine-card.border-danger  { border-left-color: #e74a3b !important; }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- ─── Summary Badges ─── -->
+<div class="d-flex flex-wrap gap-3 mb-4">
+    <div class="d-flex align-items-center bg-warning bg-opacity-10 rounded-pill px-3 py-2">
+        <i class="bi bi-exclamation-triangle-fill text-warning me-2"></i>
+        <span class="fw-bold text-warning">{{ alert_counts.low_stock }}</span>
+        <span class="ms-1 text-muted small">Low Stock</span>
+    </div>
+    <div class="d-flex align-items-center bg-info bg-opacity-10 rounded-pill px-3 py-2">
+        <i class="bi bi-clock-history text-info me-2"></i>
+        <span class="fw-bold text-info">{{ alert_counts.expiring }}</span>
+        <span class="ms-1 text-muted small">Expiring Soon</span>
+    </div>
+    <div class="d-flex align-items-center bg-danger bg-opacity-10 rounded-pill px-3 py-2">
+        <i class="bi bi-x-circle-fill text-danger me-2"></i>
+        <span class="fw-bold text-danger">{{ alert_counts.expired }}</span>
+        <span class="ms-1 text-muted small">Expired</span>
+    </div>
+</div>
+
+<!-- ─── Tabs ─── -->
+<ul class="nav nav-tabs mb-4" role="tablist">
+    <li class="nav-item">
+        <a class="nav-link {{ 'active' if active_tab == 'low_stock' }}" data-bs-toggle="tab" href="#lowStock" role="tab">
+            <i class="bi bi-exclamation-triangle me-1 text-warning"></i> Low Stock
+            <span class="badge bg-warning text-dark ms-1 alert-tab-badge">{{ low_stock|length }}</span>
+        </a>
+    </li>
+    <li class="nav-item">
+        <a class="nav-link {{ 'active' if active_tab == 'expiring' }}" data-bs-toggle="tab" href="#expiring" role="tab">
+            <i class="bi bi-clock-history me-1 text-info"></i> Expiring Soon
+            <span class="badge bg-info ms-1 alert-tab-badge">{{ expiring|length }}</span>
+        </a>
+    </li>
+    <li class="nav-item">
+        <a class="nav-link {{ 'active' if active_tab == 'expired' }}" data-bs-toggle="tab" href="#expired" role="tab">
+            <i class="bi bi-x-circle me-1 text-danger"></i> Expired
+            <span class="badge bg-danger ms-1 alert-tab-badge">{{ expired|length }}</span>
+        </a>
+    </li>
+</ul>
+
+<!-- ─── Tab Content ─── -->
+<div class="tab-content">
+    <!-- Low Stock -->
+    <div class="tab-pane fade {{ 'show active' if active_tab == 'low_stock' }}" id="lowStock" role="tabpanel">
+        {% if low_stock %}
+        <div class="row g-3">
+            {% for med in low_stock %}
+            <div class="col-md-6 col-lg-4">
+                <div class="card alert-medicine-card border-warning shadow-sm">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-start mb-2">
+                            <h6 class="fw-bold mb-0">{{ med.medicine_name }}</h6>
+                            <span class="badge bg-warning text-dark">{{ med.available_balance }} left</span>
+                        </div>
+                        <div class="text-muted small mb-3">
+                            <span class="me-3"><i class="bi bi-capsule me-1"></i>{{ med.drug_type }}</span>
+                            <span><i class="bi bi-upc-scan me-1"></i>{{ med.batch_number or 'N/A' }}</span>
+                        </div>
+                        <div class="progress mb-3" style="height: 6px;">
+                            {% set pct = (med.available_balance / (med.stock_added if med.stock_added > 0 else 1)) * 100 %}
+                            <div class="progress-bar bg-warning" style="width: {{ pct|int }}%"></div>
+                        </div>
+                        <a href="{{ url_for('medicines.edit_medicine', id=med.medicine_id) }}"
+                           class="btn btn-sm btn-outline-warning w-100">
+                            <i class="bi bi-plus-circle me-1"></i> Add Stock
+                        </a>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="text-center py-5">
+            <i class="bi bi-check-circle-fill text-success" style="font-size: 3rem;"></i>
+            <p class="text-muted mt-2">All medicine stocks are healthy!</p>
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- Expiring Soon -->
+    <div class="tab-pane fade {{ 'show active' if active_tab == 'expiring' }}" id="expiring" role="tabpanel">
+        {% if expiring %}
+        <div class="row g-3">
+            {% for med in expiring %}
+            <div class="col-md-6 col-lg-4">
+                <div class="card alert-medicine-card border-info shadow-sm">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-start mb-2">
+                            <h6 class="fw-bold mb-0">{{ med.medicine_name }}</h6>
+                            <span class="badge bg-info">{{ med.days_until_expiry }} days</span>
+                        </div>
+                        <div class="text-muted small mb-2">
+                            <span class="me-3"><i class="bi bi-capsule me-1"></i>{{ med.drug_type }}</span>
+                            <span><i class="bi bi-calendar-x me-1"></i>{{ format_date(med.expiry_date) }}</span>
+                        </div>
+                        <div class="mb-3">
+                            <small class="text-muted">Balance:</small>
+                            <span class="fw-bold">{{ med.available_balance }}</span>
+                        </div>
+                        <a href="{{ url_for('medicines.edit_medicine', id=med.medicine_id) }}"
+                           class="btn btn-sm btn-outline-info w-100">
+                            <i class="bi bi-eye me-1"></i> View Details
+                        </a>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="text-center py-5">
+            <i class="bi bi-check-circle-fill text-success" style="font-size: 3rem;"></i>
+            <p class="text-muted mt-2">No medicines expiring soon!</p>
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- Expired -->
+    <div class="tab-pane fade {{ 'show active' if active_tab == 'expired' }}" id="expired" role="tabpanel">
+        {% if expired %}
+        <div class="row g-3">
+            {% for med in expired %}
+            <div class="col-md-6 col-lg-4">
+                <div class="card alert-medicine-card border-danger shadow-sm">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-start mb-2">
+                            <h6 class="fw-bold mb-0">{{ med.medicine_name }}</h6>
+                            <span class="badge bg-danger">EXPIRED</span>
+                        </div>
+                        <div class="text-muted small mb-2">
+                            <span class="me-3"><i class="bi bi-capsule me-1"></i>{{ med.drug_type }}</span>
+                            <span><i class="bi bi-calendar-x me-1"></i>{{ format_date(med.expiry_date) }}</span>
+                        </div>
+                        <div class="mb-3">
+                            <small class="text-danger fw-semibold">
+                                Expired {{ med.days_until_expiry|abs }} days ago
+                            </small>
+                        </div>
+                        <a href="{{ url_for('medicines.edit_medicine', id=med.medicine_id) }}"
+                           class="btn btn-sm btn-outline-danger w-100">
+                            <i class="bi bi-eye me-1"></i> View Details
+                        </a>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="text-center py-5">
+            <i class="bi bi-check-circle-fill text-success" style="font-size: 3rem;"></i>
+            <p class="text-muted mt-2">No expired medicines!</p>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

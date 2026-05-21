@@ -1,0 +1,169 @@
+{% extends 'base.html' %}
+{% from 'components/_pagination.html' import render_pagination %}
+
+{% block title %}Patients - SRM Healthcare{% endblock %}
+
+{% block page_title %}Patients{% endblock %}
+
+{% block breadcrumb %}
+<ol class="breadcrumb mb-0">
+    <li class="breadcrumb-item"><a href="{{ url_for('dashboard.index') }}">Home</a></li>
+    <li class="breadcrumb-item active" aria-current="page">Patients</li>
+</ol>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Action Bar -->
+    <div class="row mb-4">
+        <div class="col-md-6">
+            <form method="GET" action="{{ url_for('patients.list_patients') }}" class="d-flex gap-2">
+                <div class="input-group">
+                    <span class="input-group-text bg-white border-end-0">
+                        <i class="bi bi-search text-muted"></i>
+                    </span>
+                    <input type="text" name="q" class="form-control border-start-0 ps-0"
+                           placeholder="Search by name, student ID, or staff ID..."
+                           value="{{ search_query }}" autocomplete="off">
+                    {% if search_query %}
+                    <a href="{{ url_for('patients.list_patients') }}" class="btn btn-outline-secondary" title="Clear search">
+                        <i class="bi bi-x-lg"></i>
+                    </a>
+                    {% endif %}
+                    <button class="btn btn-primary" type="submit">
+                        <i class="bi bi-search me-1"></i> Search
+                    </button>
+                </div>
+            </form>
+        </div>
+        <div class="col-md-6 text-md-end mt-2 mt-md-0">
+            <a href="{{ url_for('patients.search') }}" class="btn btn-outline-info me-2">
+                <i class="bi bi-funnel me-1"></i> Advanced Search
+            </a>
+            <a href="{{ url_for('patients.add_patient') }}" class="btn btn-primary">
+                <i class="bi bi-plus-lg me-1"></i> Add New Patient
+            </a>
+        </div>
+    </div>
+
+    {% if search_query %}
+    <div class="alert alert-info py-2">
+        <i class="bi bi-info-circle me-1"></i>
+        Showing results for "<strong>{{ search_query }}</strong>"
+        &middot; {{ pagination.total }} record(s) found
+    </div>
+    {% endif %}
+
+    <!-- Patients Table -->
+    <div class="card border-0 shadow-sm">
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th class="ps-4" style="width: 50px;">#</th>
+                            <th>Patient Name</th>
+                            <th>Age</th>
+                            <th>Gender</th>
+                            <th>Designation</th>
+                            <th>ID</th>
+                            <th>Total Visits</th>
+                            <th class="text-end pe-4">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% if patients %}
+                            {% for patient in patients %}
+                            <tr>
+                                <td class="ps-4 text-muted">{{ loop.index + (pagination.page - 1) * pagination.per_page }}</td>
+                                <td>
+                                    <a href="{{ url_for('patients.view_patient', id=patient.patient_id) }}"
+                                       class="fw-semibold text-decoration-none">
+                                        {{ patient.patient_name }}
+                                    </a>
+                                </td>
+                                <td>{{ patient.age }} yrs</td>
+                                <td>
+                                    {% if patient.gender == 'Male' %}
+                                        <span class="badge bg-primary bg-opacity-10 text-primary">
+                                            <i class="bi bi-gender-male me-1"></i>Male
+                                        </span>
+                                    {% elif patient.gender == 'Female' %}
+                                        <span class="badge bg-danger bg-opacity-10 text-danger">
+                                            <i class="bi bi-gender-female me-1"></i>Female
+                                        </span>
+                                    {% else %}
+                                        <span class="badge bg-secondary bg-opacity-10 text-secondary">
+                                            <i class="bi bi-gender-ambiguous me-1"></i>Other
+                                        </span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if patient.designation == 'Student' %}
+                                        <span class="badge bg-info bg-opacity-10 text-info">
+                                            <i class="bi bi-mortarboard me-1"></i>Student
+                                        </span>
+                                    {% elif patient.designation == 'Staff' %}
+                                        <span class="badge bg-success bg-opacity-10 text-success">
+                                            <i class="bi bi-person-badge me-1"></i>Staff
+                                        </span>
+                                    {% else %}
+                                        <span class="badge bg-secondary bg-opacity-10 text-secondary">
+                                            <i class="bi bi-person me-1"></i>{{ patient.designation or 'Other' }}
+                                        </span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <code>{{ patient.display_id or '—' }}</code>
+                                </td>
+                                <td>
+                                    <span class="badge bg-light text-dark border">
+                                        {{ patient.total_visits }}
+                                    </span>
+                                </td>
+                                <td class="text-end pe-4">
+                                    <div class="btn-group btn-group-sm">
+                                        <a href="{{ url_for('patients.view_patient', id=patient.patient_id) }}"
+                                           class="btn btn-outline-primary" title="View Patient">
+                                            <i class="bi bi-eye"></i>
+                                        </a>
+                                        <a href="{{ url_for('patients.edit_patient', id=patient.patient_id) }}"
+                                           class="btn btn-outline-warning" title="Edit Patient">
+                                            <i class="bi bi-pencil"></i>
+                                        </a>
+                                        <a href="{{ url_for('visits.add_visit', patient_id=patient.patient_id) }}"
+                                           class="btn btn-outline-success" title="Add Visit">
+                                            <i class="bi bi-plus-circle"></i>
+                                        </a>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        {% else %}
+                            <tr>
+                                <td colspan="8" class="text-center py-5 text-muted">
+                                    <i class="bi bi-people fs-1 d-block mb-2"></i>
+                                    {% if search_query %}
+                                        No patients found matching your search.
+                                    {% else %}
+                                        No patients registered yet.
+                                        <br>
+                                        <a href="{{ url_for('patients.add_patient') }}" class="btn btn-primary btn-sm mt-2">
+                                            <i class="bi bi-plus-lg me-1"></i> Register First Patient
+                                        </a>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                        {% endif %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Pagination -->
+    {% if pagination %}
+        {{ render_pagination(pagination, 'patients.list_patients', q=search_query) }}
+    {% endif %}
+</div>
+{% endblock %}
