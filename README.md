@@ -122,10 +122,7 @@ The app will start at: **http://localhost:5000**
 
 ## 🔑 Default Login Credentials
 
-| Field | Value |
-|-------|-------|
-| **Username** | `admin` |
-| **Password** | `admin123` |
+|
 
 > ⚠️ **Change the default password after first login in production!**
 
