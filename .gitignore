@@ -21,3 +21,8 @@ flask_session/
 *.njsproj
 *.sln
 *.swp
+
+# Databases & local state
+*.db
+instance/
+

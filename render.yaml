@@ -1,0 +1,24 @@
+# Render Blueprint Specification for SRM Healthcare
+# Deploy both Flask app and PostgreSQL DB dynamically with zero manual configuration.
+# For details, visit: https://render.com/docs/blueprints
+
+services:
+  - type: web
+    name: srm-healthcare
+    env: python
+    buildCommand: pip install -r requirements.txt
+    startCommand: gunicorn run:app
+    plan: free
+    envVars:
+      - key: SECRET_KEY
+        generateValue: true
+      - key: PYTHON_VERSION
+        value: 3.10.13
+      - key: DATABASE_URL
+        fromDatabase:
+          name: srm-healthcare-db
+          property: connectionString
+
+databases:
+  - name: srm-healthcare-db
+    plan: free

@@ -11,16 +11,38 @@ class Config:
     # Flask core
     SECRET_KEY = os.environ.get('SECRET_KEY', 'dev-secret-key-change-me')
 
-    # Database (MySQL via XAMPP)
-    DB_HOST = os.environ.get('DB_HOST', 'localhost')
-    DB_PORT = os.environ.get('DB_PORT', '3306')
-    DB_USER = os.environ.get('DB_USER', 'root')
-    DB_PASSWORD = os.environ.get('DB_PASSWORD', '')
-    DB_NAME = os.environ.get('DB_NAME', 'srm_healthcare')
+    # Database Configuration (PostgreSQL/MySQL with dynamic SQLite fallback)
+    _db_url = os.environ.get('DATABASE_URL')
+    if _db_url:
+        if _db_url.startswith('postgres://'):
+            _db_url = _db_url.replace('postgres://', 'postgresql://', 1)
+        SQLALCHEMY_DATABASE_URI = _db_url
+    else:
+        # Default MySQL parameters (XAMPP local stack)
+        DB_HOST = os.environ.get('DB_HOST', 'localhost')
+        DB_PORT = os.environ.get('DB_PORT', '3306')
+        DB_USER = os.environ.get('DB_USER', 'root')
+        DB_PASSWORD = os.environ.get('DB_PASSWORD', '')
+        DB_NAME = os.environ.get('DB_NAME', 'srm_healthcare')
 
-    SQLALCHEMY_DATABASE_URI = os.environ.get('DATABASE_URL') or (
-        f"mysql+pymysql://{DB_USER}:{DB_PASSWORD}@{DB_HOST}:{DB_PORT}/{DB_NAME}"
-    )
+        # Check if local MySQL port is active/connectable
+        import socket
+        mysql_running = False
+        try:
+            s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            s.settimeout(0.5)
+            s.connect((DB_HOST, int(DB_PORT)))
+            mysql_running = True
+            s.close()
+        except Exception:
+            pass
+
+        if mysql_running:
+            SQLALCHEMY_DATABASE_URI = f"mysql+pymysql://{DB_USER}:{DB_PASSWORD}@{DB_HOST}:{DB_PORT}/{DB_NAME}"
+        else:
+            # High-reliability SQLite fallback for local test/cloud deployment
+            SQLALCHEMY_DATABASE_URI = 'sqlite:///srm_healthcare.db'
+
     SQLALCHEMY_TRACK_MODIFICATIONS = False
     SQLALCHEMY_ENGINE_OPTIONS = {
         'pool_recycle': 280,
