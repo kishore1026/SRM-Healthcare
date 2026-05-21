@@ -12,11 +12,21 @@ from datetime import date, datetime
 
 def create_patient(form):
     """Create a new patient from form data and return the patient object."""
+    designation = form.designation.data.strip() if form.designation.data else 'Other'
+    student_id = form.student_id.data.strip() if designation == 'Student' and form.student_id.data else None
+    hostel_name = form.hostel_name.data if designation == 'Student' and form.hostel_name.data else None
+    room_number = form.room_number.data.strip() if designation == 'Student' and form.room_number.data else None
+    staff_id = form.staff_id.data.strip() if designation in ('Staff', 'Other') and form.staff_id.data else None
+
     patient = Patient(
         patient_name=form.patient_name.data.strip(),
         age=form.age.data,
         gender=form.gender.data,
-        designation=form.designation.data.strip() if form.designation.data else 'Other',
+        designation=designation,
+        student_id=student_id,
+        hostel_name=hostel_name,
+        room_number=room_number,
+        staff_id=staff_id,
         medical_history=form.medical_history.data.strip() if form.medical_history.data else None,
     )
     db.session.add(patient)
@@ -29,7 +39,21 @@ def update_patient(patient, form):
     patient.patient_name = form.patient_name.data.strip()
     patient.age = form.age.data
     patient.gender = form.gender.data
-    patient.designation = form.designation.data.strip() if form.designation.data else 'Other'
+    
+    designation = form.designation.data.strip() if form.designation.data else 'Other'
+    patient.designation = designation
+    
+    if designation == 'Student':
+        patient.student_id = form.student_id.data.strip() if form.student_id.data else None
+        patient.hostel_name = form.hostel_name.data if form.hostel_name.data else None
+        patient.room_number = form.room_number.data.strip() if form.room_number.data else None
+        patient.staff_id = None
+    else:
+        patient.student_id = None
+        patient.hostel_name = None
+        patient.room_number = None
+        patient.staff_id = form.staff_id.data.strip() if form.staff_id.data else None
+        
     patient.medical_history = form.medical_history.data.strip() if form.medical_history.data else None
     db.session.commit()
     return patient

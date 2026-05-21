@@ -68,6 +68,12 @@ def add_patient():
     ]
 
     if form.validate_on_submit():
+        # Server-side validation for designation conditional fields
+        designation = form.designation.data.strip() if form.designation.data else 'Other'
+        if designation == 'Student' and not form.student_id.data:
+            form.student_id.errors.append('Student ID Number is mandatory for Student designation.')
+            return render_template('patients/add.html', form=form, medicines=medicines)
+
         # Validate medicine selection
         med_id = form.medicine_id.data
         if med_id == 0:
@@ -87,12 +93,28 @@ def add_patient():
 
         # Transaction Block for Atomicity
         try:
+            # Determine fields based on designation
+            if designation == 'Student':
+                student_id = form.student_id.data.strip() if form.student_id.data else None
+                hostel_name = form.hostel_name.data if form.hostel_name.data else None
+                room_number = form.room_number.data.strip() if form.room_number.data else None
+                staff_id = None
+            else:
+                student_id = None
+                hostel_name = None
+                room_number = None
+                staff_id = form.staff_id.data.strip() if form.staff_id.data else None
+
             # 1. Create Patient
             patient = Patient(
                 patient_name=form.patient_name.data.strip(),
                 age=form.age.data,
                 gender=form.gender.data,
-                designation=form.designation.data.strip() if form.designation.data else 'Other',
+                designation=designation,
+                student_id=student_id,
+                hostel_name=hostel_name,
+                room_number=room_number,
+                staff_id=staff_id,
                 medical_history=form.medical_history.data.strip() if form.medical_history.data else None
             )
             db.session.add(patient)
@@ -264,6 +286,12 @@ def edit_patient(id):
         form.items_json.data = json.dumps(existing_items)
 
     if form.validate_on_submit():
+        # Server-side validation for designation conditional fields
+        designation = form.designation.data.strip() if form.designation.data else 'Other'
+        if designation == 'Student' and not form.student_id.data:
+            form.student_id.errors.append('Student ID Number is mandatory for Student designation.')
+            return render_template('patients/edit.html', form=form, patient=patient, medicines=medicines)
+
         # Parse items from items_json
         try:
             items_data = json.loads(form.items_json.data or '[]')

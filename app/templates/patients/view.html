@@ -89,6 +89,33 @@
                                 <code>SRM-H-{{ "%05d" | format(patient.patient_id) }}</code>
                             </div>
                         </div>
+                        {% if patient.designation == 'Student' %}
+                        <div class="col-sm-6 col-md-4">
+                            <div class="text-muted small fw-semibold text-uppercase" style="font-size: 0.75rem; letter-spacing: 0.5px;">Student ID Number</div>
+                            <div class="fw-semibold mt-1 text-primary">
+                                {{ patient.student_id or '—' }}
+                            </div>
+                        </div>
+                        <div class="col-sm-6 col-md-4">
+                            <div class="text-muted small fw-semibold text-uppercase" style="font-size: 0.75rem; letter-spacing: 0.5px;">Hostel Name</div>
+                            <div class="fw-semibold mt-1" style="color: var(--text-secondary);">
+                                {{ patient.hostel_name or '—' }}
+                            </div>
+                        </div>
+                        <div class="col-sm-6 col-md-4">
+                            <div class="text-muted small fw-semibold text-uppercase" style="font-size: 0.75rem; letter-spacing: 0.5px;">Room Number</div>
+                            <div class="fw-semibold mt-1" style="color: var(--text-secondary);">
+                                {{ patient.room_number or '—' }}
+                            </div>
+                        </div>
+                        {% else %}
+                        <div class="col-sm-6 col-md-4">
+                            <div class="text-muted small fw-semibold text-uppercase" style="font-size: 0.75rem; letter-spacing: 0.5px;">ID Number</div>
+                            <div class="fw-semibold mt-1 text-primary">
+                                {{ patient.staff_id or '—' }}
+                            </div>
+                        </div>
+                        {% endif %}
                     </div>
                 </div>
             </div>

@@ -66,10 +66,36 @@ class PatientForm(FlaskForm):
         render_kw={'class': 'form-select'}
     )
 
-    designation = StringField(
+    designation = SelectField(
         'Designation',
-        validators=[Optional(), Length(max=100)],
-        render_kw={'placeholder': 'Enter designation (e.g. Student, Faculty, Staff)', 'class': 'form-control'}
+        choices=DESIGNATION_CHOICES,
+        validators=[DataRequired(message='Please select a designation.')],
+        render_kw={'class': 'form-select'}
+    )
+
+    student_id = StringField(
+        'Student ID Number',
+        validators=[Optional(), Length(max=50)],
+        render_kw={'class': 'form-control'}
+    )
+
+    hostel_name = SelectField(
+        'Hostel Name',
+        choices=HOSTEL_CHOICES,
+        validators=[Optional()],
+        render_kw={'class': 'form-select'}
+    )
+
+    room_number = StringField(
+        'Room Number',
+        validators=[Optional(), Length(max=20)],
+        render_kw={'class': 'form-control'}
+    )
+
+    staff_id = StringField(
+        'ID Number',
+        validators=[Optional(), Length(max=50)],
+        render_kw={'class': 'form-control'}
     )
 
     medical_history = TextAreaField(
@@ -129,10 +155,36 @@ class EditPatientForm(FlaskForm):
         render_kw={'class': 'form-select'}
     )
 
-    designation = StringField(
+    designation = SelectField(
         'Designation',
-        validators=[Optional(), Length(max=100)],
-        render_kw={'placeholder': 'Enter designation', 'class': 'form-control'}
+        choices=DESIGNATION_CHOICES,
+        validators=[DataRequired(message='Please select a designation.')],
+        render_kw={'class': 'form-select'}
+    )
+
+    student_id = StringField(
+        'Student ID Number',
+        validators=[Optional(), Length(max=50)],
+        render_kw={'class': 'form-control'}
+    )
+
+    hostel_name = SelectField(
+        'Hostel Name',
+        choices=HOSTEL_CHOICES,
+        validators=[Optional()],
+        render_kw={'class': 'form-select'}
+    )
+
+    room_number = StringField(
+        'Room Number',
+        validators=[Optional(), Length(max=20)],
+        render_kw={'class': 'form-control'}
+    )
+
+    staff_id = StringField(
+        'ID Number',
+        validators=[Optional(), Length(max=50)],
+        render_kw={'class': 'form-control'}
     )
 
     medical_history = TextAreaField(

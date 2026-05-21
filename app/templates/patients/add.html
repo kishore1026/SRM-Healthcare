@@ -133,8 +133,44 @@
                         <div class="row g-3 mb-4">
                             <div class="col-md-6">
                                 <label for="designation" class="form-label fw-semibold">Designation <span class="text-danger">*</span></label>
-                                {{ form.designation(id='designation', class='form-control') }}
+                                {{ form.designation(id='designation', class='form-select') }}
                                 {% for error in form.designation.errors %}
+                                    <div class="invalid-feedback d-block">{{ error }}</div>
+                                {% endfor %}
+                            </div>
+                        </div>
+
+                        <!-- Conditional Student Fields -->
+                        <div id="student-fields" style="display: none;" class="row g-3 mb-4">
+                            <div class="col-md-4">
+                                <label for="student_id" class="form-label fw-semibold">Student ID Number <span class="text-danger">*</span></label>
+                                {{ form.student_id(id='student_id', class='form-control') }}
+                                {% for error in form.student_id.errors %}
+                                    <div class="invalid-feedback d-block">{{ error }}</div>
+                                {% endfor %}
+                            </div>
+                            <div class="col-md-4">
+                                <label for="hostel_name" class="form-label fw-semibold">Hostel Name</label>
+                                {{ form.hostel_name(id='hostel_name', class='form-select') }}
+                                {% for error in form.hostel_name.errors %}
+                                    <div class="invalid-feedback d-block">{{ error }}</div>
+                                {% endfor %}
+                            </div>
+                            <div class="col-md-4">
+                                <label for="room_number" class="form-label fw-semibold">Room Number</label>
+                                {{ form.room_number(id='room_number', class='form-control') }}
+                                {% for error in form.room_number.errors %}
+                                    <div class="invalid-feedback d-block">{{ error }}</div>
+                                {% endfor %}
+                            </div>
+                        </div>
+
+                        <!-- Conditional Staff / Others Fields -->
+                        <div id="staff-fields" style="display: none;" class="row g-3 mb-4">
+                            <div class="col-md-6">
+                                <label for="staff_id" class="form-label fw-semibold">ID Number (for Staff / Others)</label>
+                                {{ form.staff_id(id='staff_id', class='form-control') }}
+                                {% for error in form.staff_id.errors %}
                                     <div class="invalid-feedback d-block">{{ error }}</div>
                                 {% endfor %}
                             </div>
@@ -210,6 +246,7 @@
 {% endblock %}
 
 {% block extra_js %}
+<script src="{{ url_for('static', filename='js/patients.js') }}"></script>
 <script>
     // Preload medicine data (id, name, available_balance) from context
     window.medicineStocks = {
@@ -382,9 +419,16 @@
             // Validate Designation
             const designationEl = document.getElementById('designation');
             removeValidationFeedback(designationEl);
-            if (!designationEl.value.trim()) {
-                setInvalidState(designationEl, "Designation is required.");
+            if (!designationEl.value) {
+                setInvalidState(designationEl, "Please select a designation.");
                 formValid = false;
+            } else if (designationEl.value === 'Student') {
+                const studentIdEl = document.getElementById('student_id');
+                removeValidationFeedback(studentIdEl);
+                if (!studentIdEl.value.trim()) {
+                    setInvalidState(studentIdEl, "Student ID Number is required.");
+                    formValid = false;
+                }
             }
 
             // Validate Medicine Select

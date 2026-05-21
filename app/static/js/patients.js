@@ -26,19 +26,60 @@ function toggleDesignationFields() {
 
     const value = designation.value;
 
+    const studentIdInput = document.getElementById('student_id');
+    const hostelSelect = document.getElementById('hostel_name');
+    const roomInput = document.getElementById('room_number');
+    const staffIdInput = document.getElementById('staff_id');
+
     // Hide all conditional fields first
     studentFields.style.display = 'none';
     staffFields.style.display = 'none';
 
     if (value === 'Student') {
         studentFields.style.display = 'block';
-        // Add slide-down animation
         studentFields.classList.add('fade-in');
-    } else if (value === 'Staff') {
+        
+        // Clear inactive field
+        if (staffIdInput) {
+            staffIdInput.value = '';
+            staffIdInput.classList.remove('is-invalid', 'is-valid');
+        }
+    } else if (value === 'Staff' || value === 'Other') {
         staffFields.style.display = 'block';
         staffFields.classList.add('fade-in');
+        
+        // Clear inactive fields
+        if (studentIdInput) {
+            studentIdInput.value = '';
+            studentIdInput.classList.remove('is-invalid', 'is-valid');
+        }
+        if (hostelSelect) {
+            hostelSelect.value = '';
+            hostelSelect.classList.remove('is-invalid', 'is-valid');
+        }
+        if (roomInput) {
+            roomInput.value = '';
+            roomInput.classList.remove('is-invalid', 'is-valid');
+        }
+    } else {
+        // Clear both if designation is empty/cleared
+        if (staffIdInput) {
+            staffIdInput.value = '';
+            staffIdInput.classList.remove('is-invalid', 'is-valid');
+        }
+        if (studentIdInput) {
+            studentIdInput.value = '';
+            studentIdInput.classList.remove('is-invalid', 'is-valid');
+        }
+        if (hostelSelect) {
+            hostelSelect.value = '';
+            hostelSelect.classList.remove('is-invalid', 'is-valid');
+        }
+        if (roomInput) {
+            roomInput.value = '';
+            roomInput.classList.remove('is-invalid', 'is-valid');
+        }
     }
-    // For 'Other' or empty, both remain hidden
 }
 
 // Attach change event listener to designation dropdown
