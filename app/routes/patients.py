@@ -5,7 +5,7 @@ from app.forms.patient_forms import PatientForm
 from app.services.patient_service import (
     create_patient, update_patient, get_patient_by_id,
     get_patients_paginated, get_patient_visits, advanced_search,
-    search_patients_autocomplete,
+    search_patients_autocomplete, delete_patient,
 )
 from app.services.audit_service import log_audit
 from app.models.audit_log import AuditLog
@@ -470,6 +470,20 @@ def edit_patient(id):
             flash(f'Error updating patient and medication details: {str(e)}', 'danger')
 
     return render_template('patients/edit.html', form=form, patient=patient, medicines=medicines)
+
+
+@patients_bp.route('/<int:id>/delete', methods=['POST'])
+@login_required
+def delete_patient_route(id):
+    """Delete a patient record permanently."""
+    patient = get_patient_by_id(id)
+    if not patient:
+        flash('Patient not found.', 'warning')
+        return redirect(url_for('patients.list_patients'))
+        
+    delete_patient(patient, doctor_id=current_user.doctor_id)
+    flash(f"Patient '{patient.patient_name}' has been permanently deleted.", 'success')
+    return redirect(url_for('patients.list_patients'))
 
 
 # ---------------------------------------------------------------------------

@@ -264,10 +264,16 @@
 
                         <!-- Actions Grid -->
                         <div class="row pt-3 border-top mt-4">
-                            <div class="col-6">
+                            <div class="col-6 d-flex align-items-center gap-2">
                                 <a href="{{ url_for('patients.view_patient', id=patient.patient_id) }}" class="btn btn-outline-custom px-4 py-2">
                                     <i class="bi bi-arrow-left me-1"></i> Cancel
                                 </a>
+                                <form action="{{ url_for('patients.delete_patient_route', id=patient.patient_id) }}" method="POST" class="d-inline" onsubmit="return confirm('Are you sure you want to permanently delete this patient and all their visits and prescriptions? This action cannot be undone.');">
+                                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                    <button type="submit" class="btn btn-outline-danger px-4 py-2">
+                                        <i class="bi bi-trash me-1"></i> Delete Patient
+                                    </button>
+                                </form>
                             </div>
                             <div class="col-6 text-end">
                                 <button type="submit" class="btn btn-gradient-submit px-5 py-2">

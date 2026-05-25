@@ -59,6 +59,37 @@ def update_patient(patient, form):
     return patient
 
 
+def delete_patient(patient, doctor_id=None):
+    """Delete a patient and all their associated visits, prescriptions, and logs."""
+    from app.models.prescription import Prescription
+    from app.services.audit_service import log_action
+    
+    patient_id = patient.patient_id
+    patient_name = patient.patient_name
+    
+    # 1. Fetch and delete visits & prescriptions
+    visits = PatientVisit.query.filter_by(patient_id=patient_id).all()
+    for visit in visits:
+        prescriptions = Prescription.query.filter_by(visit_id=visit.visit_id).all()
+        for prescription in prescriptions:
+            db.session.delete(prescription)
+        db.session.delete(visit)
+        
+    # 2. Delete patient
+    db.session.delete(patient)
+    
+    # 3. Log action
+    log_action(
+        action='DELETE_PATIENT',
+        details=f"Deleted patient: {patient_name} (ID: {patient_id})",
+        doctor_id=doctor_id
+    )
+    
+    # Commit changes
+    db.session.commit()
+    return True
+
+
 def get_patient_by_id(patient_id):
     """Get patient by primary key or return None."""
     return Patient.query.get(patient_id)
